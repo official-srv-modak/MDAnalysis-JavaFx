@@ -25,6 +25,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static com.modakdev.mdanalysis.UrlValues.ANALYSIS_CHAT_URL;
+
 public class ImageViewCard {
     private static Thread chatResponseThread; // Thread for handling chat response
     private static TextArea descriptionTextArea; // Reference to the TextArea
@@ -158,7 +160,7 @@ public class ImageViewCard {
                     });
 
                     // Pause for a short time before checking for new data
-                    Thread.sleep(100); // Adjust this value as needed
+                    Thread.sleep(1); // Adjust this value as needed
                 }
             } catch (InterruptedException e) {
                 // Thread was interrupted, handle accordingly
@@ -240,18 +242,40 @@ public class ImageViewCard {
     }
 
     private static void enableZoom(ImageView imageView) {
+        // Set initial scale limits
+        double minScale = 1.0; // Minimum zoom level (no zoom out beyond original size)
+        double maxScale = 5.0; // Maximum zoom level (e.g., 5x original size)
+
+        // Set initial scale to 1 (default)
+        imageView.setScaleX(1);
+        imageView.setScaleY(1);
+
         imageView.setOnScroll((ScrollEvent event) -> {
             double scaleFactor = 1.1;
             if (event.getDeltaY() < 0) {
                 scaleFactor = 1 / scaleFactor;
             }
-            imageView.setScaleX(imageView.getScaleX() * scaleFactor);
-            imageView.setScaleY(imageView.getScaleY() * scaleFactor);
+
+            // Calculate new scale values
+            double newScaleX = imageView.getScaleX() * scaleFactor;
+            double newScaleY = imageView.getScaleY() * scaleFactor;
+
+            // Apply limits
+            if (newScaleX >= minScale && newScaleX <= maxScale) {
+                imageView.setScaleX(newScaleX);
+                imageView.setScaleY(newScaleY);
+            }
         });
 
         imageView.setOnZoom((ZoomEvent event) -> {
-            imageView.setScaleX(imageView.getScaleX() * event.getZoomFactor());
-            imageView.setScaleY(imageView.getScaleY() * event.getZoomFactor());
+            double newScaleX = imageView.getScaleX() * event.getZoomFactor();
+            double newScaleY = imageView.getScaleY() * event.getZoomFactor();
+
+            // Apply limits
+            if (newScaleX >= minScale && newScaleX <= maxScale) {
+                imageView.setScaleX(newScaleX);
+                imageView.setScaleY(newScaleY);
+            }
         });
 
         // Mouse drag event for moving the image
@@ -273,11 +297,12 @@ public class ImageViewCard {
         });
     }
 
+
     private static void loadChatResponse() {
         new Thread(() -> {
             try {
                 // API endpoint URL for chat response
-                URL url = new URL("http://10.0.0.47:8180/analysis-wrapper-module/chat-single-stream-sample");
+                URL url = new URL(ANALYSIS_CHAT_URL.getUrl());
 
                 // Open connection
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
