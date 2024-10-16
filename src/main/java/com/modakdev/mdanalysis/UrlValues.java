@@ -8,6 +8,7 @@ public enum UrlValues {
     PORT("1234"),
     IMAGE_URL(HTTP.getUrl()+LOCALHOST.getUrl()+":"+FLASK_PORT.getUrl()+"/api/get-correlation-matrix-image-df"),
     ANALYSIS_CHAT_URL(HTTP.getUrl()+IP.getUrl()+":8180/analysis-wrapper-module/chat-single-stream"),
+    ANALYSIS_CHAT_URL_SAMPLE(HTTP.getUrl()+LOCALHOST.getUrl()+":8180/analysis-wrapper-module/chat-single-stream-sample"),
     UPLOAD_FILE(HTTP.getUrl()+LOCALHOST.getUrl()+":"+PORT.getUrl()+"/product-catalog-module/product/upload-files");
 
     private final String url;

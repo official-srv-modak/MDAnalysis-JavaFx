@@ -26,6 +26,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import static com.modakdev.mdanalysis.UrlValues.ANALYSIS_CHAT_URL;
+import static com.modakdev.mdanalysis.UrlValues.ANALYSIS_CHAT_URL_SAMPLE;
 
 public class ImageViewCard {
     private static Thread chatResponseThread; // Thread for handling chat response
@@ -302,7 +303,7 @@ public class ImageViewCard {
         new Thread(() -> {
             try {
                 // API endpoint URL for chat response
-                URL url = new URL(ANALYSIS_CHAT_URL.getUrl());
+                URL url = new URL(ANALYSIS_CHAT_URL_SAMPLE.getUrl());
 
                 // Open connection
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();

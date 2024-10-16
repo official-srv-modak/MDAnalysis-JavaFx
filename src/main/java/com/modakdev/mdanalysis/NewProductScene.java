@@ -1,5 +1,6 @@
 package com.modakdev.mdanalysis;
 
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -100,9 +101,10 @@ public class NewProductScene {
                 String selectedDecisionColumn = decisionColumnComboBox.getValue();
                 uploadFiles(trainFile, testFile, productNameField.getText(), selectedColumns, selectedDecisionColumn);
                 imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText());
-                if(addProductLayout.getChildren().contains(imageViewCard))
+                List<Node> nodes = addProductLayout.getChildren();
+                if(addProductLayout.getChildren().get(5) instanceof HBox)
                 {
-                    addProductLayout.getChildren().remove(imageViewCard);
+                    addProductLayout.getChildren().remove(5);
                     addProductLayout.getChildren().add(5, imageViewCard);
                 }
                 else
@@ -218,8 +220,6 @@ public class NewProductScene {
         }
     }
 
-
-    // Method to upload files
     // Method to upload files
     private static void uploadFiles(File trainFile, File testFile, String productName, List<String> selectedColumns, String selectedDecisionColumn) {
         // Make sure to replace the URL and header accordingly
