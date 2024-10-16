@@ -66,7 +66,7 @@ public class ImageViewCard {
 
         // Add a click event to the TextArea to open it in a larger scrollable window
         descriptionTextArea.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openDescriptionWindow());
-// Add a scroll event handler to allow scrolling the TextArea
+        // Add a scroll event handler to allow scrolling the TextArea
         descriptionTextArea.setOnScroll(event -> {
             descriptionTextArea.setScrollTop(descriptionTextArea.getScrollTop() - event.getDeltaY());
         });
