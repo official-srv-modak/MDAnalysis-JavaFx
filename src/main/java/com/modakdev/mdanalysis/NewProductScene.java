@@ -5,12 +5,11 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,23 +18,33 @@ public class NewProductScene {
     private static File testFile; // Store the test file
     private static TextField splitValueField; // Split value input field
     private static VBox addProductLayout; // Layout container
+    private static List<CheckBox> headerCheckboxes; // List of checkboxes for headers
+    private static ComboBox<String> decisionColumnComboBox; // ComboBox for decision columns
+    // Remove split value field from layout
+    // Declare a variable to hold the index
+    private static int splitValueFieldIndex = -1;
 
     public static void initializeAddProductScene(Stage primaryStage) {
         // Create a new VBox for the add product layout
         addProductLayout = new VBox(15);
         addProductLayout.setStyle("-fx-padding: 20; -fx-background-color: #ffffff;");
+        headerCheckboxes = new ArrayList<>(); // Initialize header checkboxes list
 
         // Create UI elements for product input
         TextField productNameField = new TextField();
         productNameField.setPromptText("Enter Product Name");
 
+        // Create "Go Back" button
+        Button goBackButton = new Button("Go Back");
+        // Set an onAction event (leave empty for now)
+        goBackButton.setOnAction(e -> {
+            UIModuleProcessing.goBack(primaryStage);
+        });
+
         // Media choosers for train and test files
         Button trainFileButton = new Button("Choose Train Set (CSV)");
         Button testFileButton = new Button("Choose Test Set (CSV)");
         Button uploadFilesButton = new Button("Upload Files"); // Upload button
-
-        // Decision column dropdown
-        ComboBox<String> decisionColumnDropdown = new ComboBox<>();
 
         // Split value input
         splitValueField = new TextField();
@@ -48,14 +57,15 @@ public class NewProductScene {
             trainFile = chooseFile(fileChooser, "Choose Train Set (CSV)", primaryStage);
             if (trainFile != null) {
                 trainFileButton.setText(trainFile.getName()); // Change button text to file name
-                // Read the CSV headers and populate the dropdown
+                // Read the CSV headers and populate the checkboxes
                 List<String> headers = readCsvHeaders(trainFile);
-                decisionColumnDropdown.getItems().clear();
-                decisionColumnDropdown.getItems().addAll(headers);
+                populateHeaderCheckboxes(headers);
 
                 // If there's a test file, hide the split value field
-                if (testFile != null) {
+                if(!testFile.getAbsolutePath().equalsIgnoreCase(trainFile.getAbsolutePath()))
                     removeSplitValueField();
+                else if(splitValueFieldIndex != -1){
+                    addSplitValueField();
                 }
             }
         });
@@ -64,20 +74,25 @@ public class NewProductScene {
             testFile = chooseFile(fileChooser, "Choose Test Set (CSV)", primaryStage);
             if (testFile != null) {
                 testFileButton.setText(testFile.getName()); // Change button text to file name
-                // Read the CSV headers and populate the dropdown
+                // Read the CSV headers and populate the checkboxes
                 List<String> headers = readCsvHeaders(testFile);
-                decisionColumnDropdown.getItems().clear();
-                decisionColumnDropdown.getItems().addAll(headers);
+                populateHeaderCheckboxes(headers);
 
                 // If a test file is selected, remove the split value field
-                removeSplitValueField();
+                if(!testFile.getAbsolutePath().equalsIgnoreCase(trainFile.getAbsolutePath()))
+                    removeSplitValueField();
+                else if(splitValueFieldIndex != -1){
+                    addSplitValueField();
+                }
             }
         });
 
         // Upload button action
         uploadFilesButton.setOnAction(e -> {
             if (trainFile != null && testFile != null) {
-                uploadFiles(trainFile, testFile, productNameField.getText(), decisionColumnDropdown.getValue());
+                List<String> selectedColumns = getSelectedColumns();
+                String selectedDecisionColumn = decisionColumnComboBox.getValue();
+                uploadFiles(trainFile, testFile, productNameField.getText(), selectedColumns, selectedDecisionColumn);
             } else {
                 showAlert("Error", "Please select both train and test files.");
             }
@@ -85,18 +100,23 @@ public class NewProductScene {
 
         // Add all elements to the layout
         addProductLayout.getChildren().addAll(
+                goBackButton, // Add the Go Back button at the top
                 new Label("Product Name:"), productNameField,
                 trainFileButton,
                 testFileButton,
                 splitValueField, // Initially added to layout
-                new Label("Decision Column:"), decisionColumnDropdown,
+                new Label("Select Columns:"), // Label for checkboxes
                 uploadFilesButton // Add the upload button
         );
 
         // Create a new Scene for adding a product
-        Scene addProductScene = new Scene(addProductLayout, 400, 400);
-        primaryStage.setScene(addProductScene);
-        primaryStage.setMaximized(true); // Set the window maximized
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(addProductLayout);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+
+        Scene scene = new Scene(scrollPane);
+        UIModuleProcessing.addScene("New Product", scene, primaryStage);
     }
 
     // Method to choose file
@@ -123,17 +143,69 @@ public class NewProductScene {
         return headers;
     }
 
-    // Remove split value field from layout
+    // Method to populate header checkboxes
+    private static void populateHeaderCheckboxes(List<String> headers) {
+        addProductLayout.getChildren().removeIf(node -> node instanceof CheckBox); // Remove existing checkboxes
+        headerCheckboxes.clear(); // Clear existing checkboxes list
+        for (String header : headers) {
+            CheckBox checkBox = new CheckBox(header);
+            headerCheckboxes.add(checkBox); // Add checkbox to the list
+            addProductLayout.getChildren().add(checkBox); // Add checkbox to layout
+        }
+
+        // Populate the ComboBox for decision columns
+        populateDecisionColumnComboBox(headers);
+    }
+
+    // Method to populate the ComboBox for decision columns
+    private static void populateDecisionColumnComboBox(List<String> headers) {
+        if (decisionColumnComboBox == null) {
+            decisionColumnComboBox = new ComboBox<>(); // Create ComboBox for decision columns
+            addProductLayout.getChildren().add(new Label("Select Decision Column:")); // Label for ComboBox
+            addProductLayout.getChildren().add(decisionColumnComboBox); // Add ComboBox to layout
+        }
+        decisionColumnComboBox.getItems().clear(); // Clear existing items
+        decisionColumnComboBox.getItems().addAll(headers); // Add headers to ComboBox
+    }
+
+    // Method to get selected columns
+    private static List<String> getSelectedColumns() {
+        List<String> selectedColumns = new ArrayList<>();
+        for (CheckBox checkBox : headerCheckboxes) {
+            if (checkBox.isSelected()) {
+                selectedColumns.add(checkBox.getText());
+            }
+        }
+        return selectedColumns;
+    }
+
+
+
     private static void removeSplitValueField() {
         if (addProductLayout.getChildren().contains(splitValueField)) {
+            // Get the index of splitValueField before removing
+            splitValueFieldIndex = addProductLayout.getChildren().indexOf(splitValueField);
             addProductLayout.getChildren().remove(splitValueField);
         }
     }
 
+    private static void addSplitValueField() {
+        if (!addProductLayout.getChildren().contains(splitValueField)) {
+            // Add it back at the stored index
+            if (splitValueFieldIndex != -1 && splitValueFieldIndex <= addProductLayout.getChildren().size()) {
+                addProductLayout.getChildren().add(splitValueFieldIndex, splitValueField);
+            } else {
+                addProductLayout.getChildren().add(splitValueField); // Fallback to adding at the end
+            }
+        }
+    }
+
+
     // Method to upload files
-    private static void uploadFiles(File trainFile, File testFile, String productName, String decisionColumn) {
+    // Method to upload files
+    private static void uploadFiles(File trainFile, File testFile, String productName, List<String> selectedColumns, String selectedDecisionColumn) {
         // Make sure to replace the URL and header accordingly
-        String apiUrl = "http://10.0.0.47:8765/product-catalog-module/product/upload-files";
+        String apiUrl = "http://10.0.0.47:1234/product-catalog-module/product/upload-files";
         String authorization = "Basic YWRtaW46YWRtaW4="; // Your Authorization header
 
         try {
@@ -144,11 +216,79 @@ public class NewProductScene {
             connection.setRequestProperty("Authorization", authorization);
             connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=---Boundary");
 
-            // Write files and additional parameters
-            // Implement file uploading logic here...
+            // Prepare the output stream for writing data
+            OutputStream outputStream = connection.getOutputStream();
+            String boundary = "---Boundary";
+            String lineEnd = "\r\n";
 
-            // After uploading, show success message
-            showAlert("Success", "Files uploaded successfully.");
+            // Write product name
+            outputStream.write(("--" + boundary + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Disposition: form-data; name=\"productName\"" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Type: text/plain" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+            outputStream.write(productName.getBytes(StandardCharsets.UTF_8));
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+
+            // Write selected columns
+            outputStream.write(("--" + boundary + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Disposition: form-data; name=\"selectedColumns\"" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Type: text/plain" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+            outputStream.write(String.join(",", selectedColumns).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+
+            // Write selected decision column
+            outputStream.write(("--" + boundary + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Disposition: form-data; name=\"selectedDecisionColumn\"" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Type: text/plain" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+//            outputStream.write(selectedDecisionColumn.getBytes(StandardCharsets.UTF_8));
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+
+            // Write train file
+            outputStream.write(("--" + boundary + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Disposition: form-data; name=\"trainFile\"; filename=\"" + trainFile.getName() + "\"" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Type: application/octet-stream" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+
+            // Read and write the train file
+            try (FileInputStream fileInputStream = new FileInputStream(trainFile)) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+            }
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+
+            // Write test file
+            outputStream.write(("--" + boundary + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Disposition: form-data; name=\"testFile\"; filename=\"" + testFile.getName() + "\"" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(("Content-Type: application/octet-stream" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+
+            // Read and write the test file
+            try (FileInputStream fileInputStream = new FileInputStream(testFile)) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+            }
+            outputStream.write(lineEnd.getBytes(StandardCharsets.UTF_8));
+
+            // End of multipart/form-data
+            outputStream.write(("--" + boundary + "--" + lineEnd).getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
+            outputStream.close();
+
+            // Check the server response
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                showAlert("Success", "Files uploaded successfully.");
+            } else {
+                showAlert("Error", "Failed to upload files. Server returned: " + responseCode);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             showAlert("Error", "Failed to upload files: " + e.getMessage());

@@ -11,10 +11,12 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Stack;
 
 import static com.modakdev.mdanalysis.NewProductScene.initializeAddProductScene;
 
 public class HelloApplication extends Application {
+
     @Override
     public void start(Stage stage) throws IOException {
         // Create the root container (AnchorPane)
@@ -39,11 +41,8 @@ public class HelloApplication extends Application {
         // Add the button to the root container
         root.getChildren().addAll(card, addButton);
 
-        Scene scene = new Scene(root, 1000, 700);
-        stage.setTitle("Project Overview");
-        stage.setScene(scene);
-        stage.setMaximized(true); // Set the window maximized
-        stage.show();
+        Scene scene = new Scene(root);
+        UIModuleProcessing.addScene("Project overview", scene, stage);
     }
 
     public static void main(String[] args) {
