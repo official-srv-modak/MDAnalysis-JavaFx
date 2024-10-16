@@ -2,6 +2,7 @@ package com.modakdev.mdanalysis;
 
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -20,6 +21,9 @@ public class NewProductScene {
     private static VBox addProductLayout; // Layout container
     private static List<CheckBox> headerCheckboxes; // List of checkboxes for headers
     private static ComboBox<String> decisionColumnComboBox; // ComboBox for decision columns
+
+    private static HBox imageViewCard;
+
     // Remove split value field from layout
     // Declare a variable to hold the index
     private static int splitValueFieldIndex = -1;
@@ -76,6 +80,8 @@ public class NewProductScene {
                 testFileButton.setText(testFile.getName()); // Change button text to file name
                 // Read the CSV headers and populate the checkboxes
                 List<String> headers = readCsvHeaders(testFile);
+                Label checkBoxLabel = new Label("Select Columns:");
+                addProductLayout.getChildren().add(checkBoxLabel);
                 populateHeaderCheckboxes(headers);
 
                 // If a test file is selected, remove the split value field
@@ -93,10 +99,22 @@ public class NewProductScene {
                 List<String> selectedColumns = getSelectedColumns();
                 String selectedDecisionColumn = decisionColumnComboBox.getValue();
                 uploadFiles(trainFile, testFile, productNameField.getText(), selectedColumns, selectedDecisionColumn);
+                imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText());
+                if(addProductLayout.getChildren().contains(imageViewCard))
+                {
+                    addProductLayout.getChildren().remove(imageViewCard);
+                    addProductLayout.getChildren().add(5, imageViewCard);
+                }
+                else
+                    addProductLayout.getChildren().add(5, imageViewCard);
+
             } else {
                 showAlert("Error", "Please select both train and test files.");
             }
+
+
         });
+
 
         // Add all elements to the layout
         addProductLayout.getChildren().addAll(
@@ -105,8 +123,8 @@ public class NewProductScene {
                 trainFileButton,
                 testFileButton,
                 splitValueField, // Initially added to layout
-                new Label("Select Columns:"), // Label for checkboxes
                 uploadFilesButton // Add the upload button
+
         );
 
         // Create a new Scene for adding a product
@@ -205,7 +223,7 @@ public class NewProductScene {
     // Method to upload files
     private static void uploadFiles(File trainFile, File testFile, String productName, List<String> selectedColumns, String selectedDecisionColumn) {
         // Make sure to replace the URL and header accordingly
-        String apiUrl = "http://10.0.0.47:1234/product-catalog-module/product/upload-files";
+        String apiUrl = UrlValues.UPLOAD_FILE.getUrl();
         String authorization = "Basic YWRtaW46YWRtaW4="; // Your Authorization header
 
         try {
