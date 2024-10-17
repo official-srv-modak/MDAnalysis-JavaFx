@@ -39,8 +39,8 @@ public class ImageViewCard {
             loadImageFromCurl(imageView, values[0], imageUrl);
         }
 
-        imageView.setFitWidth(320);
-        imageView.setFitHeight(240);
+        imageView.setFitWidth(640);
+        imageView.setFitHeight(480);
 
         // Add click event to open the image in a new window when clicked
         imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openZoomedImage(imageView.getImage()));
@@ -78,10 +78,14 @@ public class ImageViewCard {
         VBox textContainer = new VBox(5); // 5 is the spacing between elements
         textContainer.getChildren().addAll(titleLabel, descriptionTextArea);
 
-        // Set the TextArea's preferred width to 50% of the parent container
-        descriptionTextArea.setPrefWidth(800); // Example fixed width to check responsiveness
-        descriptionTextArea.setMinWidth(600); // Minimum width to avoid collapsing
-        descriptionTextArea.setMaxWidth(Double.MAX_VALUE); // Allow expanding
+        // Set the preferred width and height to 50% of the parent container
+        descriptionTextArea.setPrefWidth(640);
+        descriptionTextArea.setPrefHeight(480);
+
+// Set the minimum width and height to avoid collapsing
+        descriptionTextArea.setMinWidth(640); // Minimum width to ensure it doesn't collapse too much
+        descriptionTextArea.setMinHeight(480); // Minimum height to ensure sufficient space
+
 
         // Create an HBox for the card layout
         HBox card = new HBox(10); // 10 is the spacing between the image and text
