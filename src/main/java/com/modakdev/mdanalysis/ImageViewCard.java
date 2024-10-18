@@ -15,6 +15,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -25,13 +26,12 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static com.modakdev.mdanalysis.UIModuleProcessing.AI_CHAT_STYLE;
-import static com.modakdev.mdanalysis.UIModuleProcessing.loadChatResponse;
+import static com.modakdev.mdanalysis.UIModuleProcessing.*;
 import static com.modakdev.mdanalysis.UrlValues.*;
 
 public class ImageViewCard {
     private static Thread chatResponseThread; // Thread for handling chat response
-    private static TextArea descriptionTextArea; // Reference to the TextArea
+    private static TextFlow descriptionTextArea; // Reference to the TextArea
 
     public static HBox initialise(String imageUrl, String... values) {
         // Create the image view
@@ -50,25 +50,25 @@ public class ImageViewCard {
         Label titleLabel = new Label("AI Recommendations");
 
         // Create a TextArea for the description
-        descriptionTextArea = new TextArea();
-        descriptionTextArea.setEditable(false); // Make it read-only
-        descriptionTextArea.setWrapText(true); // Enable wrapping
-
+        descriptionTextArea = new TextFlow();
+//        descriptionTextArea.setEditable(false); // Make it read-only
+//        descriptionTextArea.setWrapText(true); // Enable wrapping
+//
         // Set styles for the TextArea
         descriptionTextArea.setStyle(
-                AI_CHAT_STYLE
+                AI_CHAT_STYLE_FLOW
         );
 
 
         // Load the chat response into the TextArea
-        loadChatResponse("print hello world in python", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
+        loadChatResponse("write a code to print # in pyramid and explain me", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
 
         // Add a click event to the TextArea to open it in a larger scrollable window
         descriptionTextArea.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openDescriptionWindow());
         // Add a scroll event handler to allow scrolling the TextArea
-        descriptionTextArea.setOnScroll(event -> {
-            descriptionTextArea.setScrollTop(descriptionTextArea.getScrollTop() - event.getDeltaY());
-        });
+//        descriptionTextArea.setOnScroll(event -> {
+//            descriptionTextArea.setScrollTop(descriptionTextArea.getScrollTop() - event.getDeltaY());
+//        });
 
         // Create a VBox for the title and description
         VBox textContainer = new VBox(5); // 5 is the spacing between elements
@@ -104,7 +104,7 @@ public class ImageViewCard {
         descriptionStage.setTitle("AI recommendations");
 
         // Create a TextArea for the description
-        TextArea descriptionArea = new TextArea(descriptionTextArea.getText());
+        TextArea descriptionArea = new TextArea(getTextFromTextFlow(descriptionTextArea));
         descriptionArea.setEditable(false); // Make it read-only
         descriptionArea.setWrapText(true); // Enable wrapping
 
@@ -150,7 +150,7 @@ public class ImageViewCard {
                 while (true) { // Keep the thread running
                     Platform.runLater(() -> {
                         // Get the new text from the source TextArea
-                        String newText = descriptionTextArea.getText();
+                        String newText = getTextFromTextFlow(descriptionTextArea);
                         double scrollPos = descriptionArea.getScrollTop(); // Save current scroll position
 
                         // Only update if the new text is different to avoid unnecessary updates
