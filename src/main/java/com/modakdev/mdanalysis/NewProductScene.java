@@ -22,7 +22,7 @@ public class NewProductScene {
     private static VBox addProductLayout; // Layout container
     private static List<CheckBox> headerCheckboxes; // List of checkboxes for headers
     private static ComboBox<String> decisionColumnComboBox; // ComboBox for decision columns
-
+    private static Button analyseButton, uploadFilesButton;
     private static HBox imageViewCard;
 
     // Remove split value field from layout
@@ -49,7 +49,8 @@ public class NewProductScene {
         // Media choosers for train and test files
         Button trainFileButton = new Button("Choose Train Set (CSV)");
         Button testFileButton = new Button("Choose Test Set (CSV)");
-        Button uploadFilesButton = new Button("Upload Files"); // Upload button
+        uploadFilesButton = new Button("Upload Files"); // Upload button
+        analyseButton = new Button("Analyse");
 
         // Split value input
         splitValueField = new TextField();
@@ -67,7 +68,7 @@ public class NewProductScene {
                 populateHeaderCheckboxes(headers);
 
                 // If there's a test file, hide the split value field
-                if(!testFile.getAbsolutePath().equalsIgnoreCase(trainFile.getAbsolutePath()))
+                if(testFile != null && !testFile.getAbsolutePath().equalsIgnoreCase(trainFile.getAbsolutePath()))
                     removeSplitValueField();
                 else if(splitValueFieldIndex != -1){
                     addSplitValueField();
@@ -115,6 +116,16 @@ public class NewProductScene {
             }
 
 
+        });
+
+        analyseButton.setOnAction(actionEvent -> {
+            if(!productNameField.getText().isBlank() || trainFileButton.getText().contains("Choose Train") || testFileButton.getText().contains("Choose Test"))
+            {
+
+            }
+            else {
+                showAlert("Mandatory Field missing", "Name, train set, test and split is mandatory");
+            }
         });
 
 
@@ -304,6 +315,12 @@ public class NewProductScene {
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 showAlert("Success", "Files uploaded successfully.");
+                if(!addProductLayout.getChildren().contains(analyseButton))
+                {
+                    int ind = addProductLayout.getChildren().indexOf(uploadFilesButton);
+                    addProductLayout.getChildren().add(ind+1, analyseButton);
+                }
+
             } else {
                 showAlert("Error", "Failed to upload files. Server returned: " + responseCode);
             }
@@ -311,6 +328,8 @@ public class NewProductScene {
             e.printStackTrace();
             showAlert("Error", "Failed to upload files: " + e.getMessage());
         }
+
+
     }
 
     // Method to show alerts
