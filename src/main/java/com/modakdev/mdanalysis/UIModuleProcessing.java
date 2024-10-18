@@ -399,4 +399,53 @@ public abstract class UIModuleProcessing {
             }
         }
     }
+
+
+    public static String getCorrelationalMatrix(String trainsetName, String modelName, String resultColumn, int numberOfTrainData) {
+        try {
+            // Create the URL and open the connection
+            URL url = new URL("http://127.0.0.1:7654/api/get-correlation-matrix-info");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+
+            // Create the JSON payload
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("train_set_name", trainsetName);
+            jsonObject.addProperty("model_name", modelName);
+            jsonObject.addProperty("columns_to_encode", "");
+            jsonObject.addProperty("result_column", resultColumn);
+            jsonObject.addProperty("number_of_train_data", numberOfTrainData);
+            String jsonPayload = jsonObject.toString();
+
+            // Write the payload to the connection output stream
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            // Get the response code
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                // Read the response
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                // Remove all double quotes from the response
+                return response.toString().replaceAll("\"", "");
+            } else {
+                System.err.println("Error: " + responseCode);
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

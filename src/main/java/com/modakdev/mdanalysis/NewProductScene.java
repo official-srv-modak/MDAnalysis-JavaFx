@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.modakdev.mdanalysis.UIModuleProcessing.AI_CHAT_STYLE;
+import static com.modakdev.mdanalysis.UIModuleProcessing.getCorrelationalMatrix;
 
 public class NewProductScene {
     private static File trainFile; // Store the train file
@@ -106,7 +107,8 @@ public class NewProductScene {
                 List<String> selectedColumns = getSelectedColumns();
                 String selectedDecisionColumn = decisionColumnComboBox.getValue();
                 uploadFiles(trainFile, testFile, productNameField.getText(), selectedColumns, selectedDecisionColumn);
-                imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText());
+                String corrMat = getCorrelationalMatrix(trainFileButton.getText(), productNameField.getText(),"", 100);
+                imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText(), corrMat);
                 List<Node> nodes = addProductLayout.getChildren();
                 if(addProductLayout.getChildren().get(5) instanceof HBox)
                 {
@@ -169,7 +171,7 @@ public class NewProductScene {
         analysisArea.setPrefWidth(640);
         analysisArea.setPrefHeight(480);
 
-// Set the minimum width and height to avoid collapsing
+        // Set the minimum width and height to avoid collapsing
         analysisArea.setMinWidth(640); // Minimum width to ensure it doesn't collapse too much
         analysisArea.setMinHeight(480); // Minimum height to ensure sufficient space
 
@@ -186,53 +188,6 @@ public class NewProductScene {
         if(payloadString.contains("\""))
             payloadString = payloadString.replaceAll("\"", "");
         UIModuleProcessing.loadChatResponse(payloadString, UrlValues.ANALYSIS_CHAT_URL_FLASK.getUrl(), analysisArea);
-        /*// Define the URL of the endpoint
-        String urlString = "http://10.0.0.47:8180/analysis-wrapper-module/chat-single-stream";
-
-        try {
-            // Create a URL object and open a connection
-            URL url = new URL(urlString);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-            // Set request method to POST
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoOutput(true); // Allow sending data
-
-            if(payloadString.contains("\""))
-                payloadString = payloadString.replaceAll("\"", "");
-
-            // Create the JSON payload with the "query" field containing jsonString
-            JsonObject payObj = new JsonObject();
-            payObj.addProperty("query", payloadString);
-            String payLoad = payObj.toString();
-
-            // Write the payload to the output stream
-            try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
-                byte[] input = payLoad.getBytes(StandardCharsets.UTF_8);
-                outputStream.write(input, 0, input.length);
-            }
-
-            // Get the response code
-            int responseCode = connection.getResponseCode();
-            System.out.println("Response Code: " + responseCode);
-
-            // Read the response from the server
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                String line;
-                StringBuilder response = new StringBuilder();
-                while ((line = reader.readLine()) != null) {
-                    response.append(line);
-                }
-                System.out.println("Response: " + response.toString());
-            }
-
-            // Close the connection
-            connection.disconnect();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }*/
     }
 
     // Method to choose file

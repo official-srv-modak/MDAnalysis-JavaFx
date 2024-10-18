@@ -61,7 +61,10 @@ public class ImageViewCard {
 
 
         // Load the chat response into the TextArea
-        loadChatResponse("write a code to print # in pyramid and explain me", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
+        if(values.length > 1 && values[1] != null && !values[1].isBlank())
+            loadChatResponse(values[1], ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
+        else
+            loadChatResponse("write a code to print # in pyramid and explain me", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
 
         // Add a click event to the TextArea to open it in a larger scrollable window
         descriptionTextArea.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openDescriptionWindow());
