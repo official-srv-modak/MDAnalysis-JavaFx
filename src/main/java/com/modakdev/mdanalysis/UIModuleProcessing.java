@@ -31,20 +31,19 @@ public abstract class UIModuleProcessing {
 
     static BackStackInfo backStackInfo = new BackStackInfo();
 
-    public static String AI_CHAT_STYLE = "-fx-font-family: 'Courier New'; " + // Monospaced font
+    public static String AI_CHAT_STYLE = "-fx-font-family: 'Arial'; " + // Monospaced font
             "-fx-font-size: 12px; " + // Font size
             "-fx-background-color: #f7f7f7; " + // Light background color
             "-fx-border-color: #ccc; " + // Border color
             "-fx-border-width: 1; " + // Border width
-            "-fx-padding: 5;" + // Padding
-            "-fx-text-fill: #333;"; // Text color
+            "-fx-padding: 5;"; // Padding
 
-
+/*
     public static String AI_CHAT_STYLE_FLOW = "-fx-font-family: 'Courier New'; " + // Monospaced font
 
             "-fx-border-color: #ccc; " + // Border color
             "-fx-border-width: 1; " + // Border width
-            "-fx-padding: 5;" ; // Padding
+            "-fx-padding: 5;" ; // Padding*/
 
 
     public static boolean isValidEmail(String email) {

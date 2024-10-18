@@ -107,7 +107,8 @@ public class NewProductScene {
                 List<String> selectedColumns = getSelectedColumns();
                 String selectedDecisionColumn = decisionColumnComboBox.getValue();
                 uploadFiles(trainFile, testFile, productNameField.getText(), selectedColumns, selectedDecisionColumn);
-                String corrMat = getCorrelationalMatrix(trainFileButton.getText(), productNameField.getText(),"", 100);
+                String corrMat = "Explain me this correlational matrix and no codes please just bullet point explanation :- ";
+                corrMat += getCorrelationalMatrix(trainFileButton.getText(), productNameField.getText(),"", 100);
                 imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText(), corrMat);
                 List<Node> nodes = addProductLayout.getChildren();
                 if(addProductLayout.getChildren().get(5) instanceof HBox)
@@ -119,7 +120,7 @@ public class NewProductScene {
                     addProductLayout.getChildren().add(5, imageViewCard);
 
             } else {
-                showAlert("Error", "Please select both train and test files.");
+                showAlert("Error", "Please fill name, train and test files.");
             }
 
 
@@ -167,6 +168,7 @@ public class NewProductScene {
         TextArea analysisArea = new TextArea();
         analysisArea.setStyle(AI_CHAT_STYLE);
         analysisArea.setWrapText(true);
+        analysisArea.setEditable(false);
 
         analysisArea.setPrefWidth(640);
         analysisArea.setPrefHeight(480);

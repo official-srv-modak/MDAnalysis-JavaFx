@@ -31,7 +31,8 @@ import static com.modakdev.mdanalysis.UrlValues.*;
 
 public class ImageViewCard {
     private static Thread chatResponseThread; // Thread for handling chat response
-    private static TextFlow descriptionTextArea; // Reference to the TextArea
+//    private static TextFlow descriptionTextArea; // Reference to the TextArea
+    private static TextArea descriptionTextArea; // Reference to the TextArea
 
     public static HBox initialise(String imageUrl, String... values) {
         // Create the image view
@@ -50,13 +51,13 @@ public class ImageViewCard {
         Label titleLabel = new Label("AI Recommendations");
 
         // Create a TextArea for the description
-        descriptionTextArea = new TextFlow();
-//        descriptionTextArea.setEditable(false); // Make it read-only
-//        descriptionTextArea.setWrapText(true); // Enable wrapping
+        descriptionTextArea = new TextArea();
+        descriptionTextArea.setEditable(false); // Make it read-only
+        descriptionTextArea.setWrapText(true); // Enable wrapping
 //
         // Set styles for the TextArea
         descriptionTextArea.setStyle(
-                AI_CHAT_STYLE_FLOW
+                AI_CHAT_STYLE
         );
 
 
@@ -107,9 +108,10 @@ public class ImageViewCard {
         descriptionStage.setTitle("AI recommendations");
 
         // Create a TextArea for the description
-        TextArea descriptionArea = new TextArea(getTextFromTextFlow(descriptionTextArea));
+        TextArea descriptionArea = new TextArea(descriptionTextArea.getText());
         descriptionArea.setEditable(false); // Make it read-only
         descriptionArea.setWrapText(true); // Enable wrapping
+        descriptionArea.setStyle(AI_CHAT_STYLE);
 
         /*// Set styles for the TextArea
         descriptionArea.setStyle(
@@ -153,7 +155,7 @@ public class ImageViewCard {
                 while (true) { // Keep the thread running
                     Platform.runLater(() -> {
                         // Get the new text from the source TextArea
-                        String newText = getTextFromTextFlow(descriptionTextArea);
+                        String newText = descriptionTextArea.getText();
                         double scrollPos = descriptionArea.getScrollTop(); // Save current scroll position
 
                         // Only update if the new text is different to avoid unnecessary updates
