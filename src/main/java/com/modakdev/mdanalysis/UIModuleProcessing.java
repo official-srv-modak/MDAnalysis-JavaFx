@@ -6,6 +6,10 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
@@ -27,13 +31,20 @@ public abstract class UIModuleProcessing {
 
     static BackStackInfo backStackInfo = new BackStackInfo();
 
-    public static String AI_CHAT_STYLE = "-fx-font-family: 'Courier New'; " + // Monospaced font
+    public static String AI_CHAT_STYLE = "-fx-font-family: 'Arial'; " + // Monospaced font
             "-fx-font-size: 12px; " + // Font size
             "-fx-background-color: #f7f7f7; " + // Light background color
             "-fx-border-color: #ccc; " + // Border color
             "-fx-border-width: 1; " + // Border width
-            "-fx-padding: 5;" + // Padding
-            "-fx-text-fill: #333;"; // Text color
+            "-fx-padding: 5;"; // Padding
+
+/*
+    public static String AI_CHAT_STYLE_FLOW = "-fx-font-family: 'Courier New'; " + // Monospaced font
+
+            "-fx-border-color: #ccc; " + // Border color
+            "-fx-border-width: 1; " + // Border width
+            "-fx-padding: 5;" ; // Padding*/
+
 
     public static boolean isValidEmail(String email) {
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
@@ -201,4 +212,239 @@ public abstract class UIModuleProcessing {
     }
 
 
+    public static String getTextFromTextFlow(TextFlow textFlow) {
+        StringBuilder fullText = new StringBuilder();
+
+        for (var node : textFlow.getChildren()) {
+            if (node instanceof Text) {
+                fullText.append(((Text) node).getText());
+            }
+        }
+
+        return fullText.toString();
+    }
+
+    public static void setTextInTextFlow(TextFlow textFlow, String newText) {
+        // Clear existing text
+        textFlow.getChildren().clear();
+
+        // Split the new text into lines if you want to maintain line breaks
+        String[] lines = newText.split("\n");
+
+        for (String line : lines) {
+            // Create a new Text node for each line
+            Text textNode = new Text(line);
+
+            // Optionally set additional styles, like font size or color
+            textNode.setStyle("-fx-font-size: 14px; -fx-fill: black;");
+
+            // Add the Text node to the TextFlow
+            textFlow.getChildren().add(textNode);
+
+            // Add a line break if needed
+            textFlow.getChildren().add(new Text("\n"));
+        }
+    }
+
+
+    public static void loadChatResponse(String query, String urlStr, TextFlow textFlow) {
+        new Thread(() -> {
+            try {
+                // API endpoint URL for chat response
+                URL url = new URL(urlStr);
+
+                // Open connection
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setDoOutput(true);
+
+                // Create the JSON payload
+                JsonObject payObj = new JsonObject();
+                payObj.addProperty("query", query);
+                String payLoad = payObj.toString();
+
+                // Write the JSON input to the connection output stream
+                try (OutputStream os = connection.getOutputStream()) {
+                    byte[] input = payLoad.getBytes(StandardCharsets.UTF_8);
+                    os.write(input, 0, input.length);
+                }
+
+                // Check response code
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    // Read the input stream as a stream of characters
+                    try (InputStream inputStream = connection.getInputStream();
+                         Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+
+                        StringBuilder responseBuilder = new StringBuilder();
+                        int character;
+                        while ((character = reader.read()) != -1) {
+                            // Append the character to the response builder
+                            responseBuilder.append((char) character);
+
+                            // Update the UI with the new response
+                            String currentResponse = responseBuilder.toString();
+                            Platform.runLater(() -> {
+                                // Clear the previous content
+                                textFlow.getChildren().clear();
+                                // Apply formatting to the current response
+                                formatResponse(currentResponse, textFlow);
+                                // Ensure the TextFlow scrolls to the bottom (if needed)
+                                textFlow.setLayoutY(textFlow.getLayoutY());
+                            });
+                        }
+
+                    }
+                } else {
+                    System.err.println("Request failed. Response code: " + responseCode);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    // Method to format the response text
+    private static void formatResponse(String response, TextFlow textFlow) {
+        String[] lines = response.split("\n");
+
+        for (String line : lines) {
+            // Check for code blocks
+            if (line.startsWith("```")) {
+                // Check for end of code block
+                if (line.equals("```")) {
+                    // End code block
+                    continue;
+                } else {
+                    // Start code block; use monospace font
+                    Text codeText = new Text();
+                    codeText.setFont(Font.font("Monospaced")); // Monospace font for code
+                    codeText.setText(line + "\n");
+                    textFlow.getChildren().add(codeText);
+                    continue;
+                }
+            }
+
+            // Check for bold text
+            if (line.contains("*")) {
+                line = line.replaceAll("\\*(.*?)\\*", "$1"); // Remove asterisks for processing
+                Text boldText = new Text(line);
+                boldText.setFont(Font.font("Arial", FontWeight.BOLD, 12)); // Bold font
+                textFlow.getChildren().add(boldText);
+            } else {
+                // Regular statement, use Arial
+                Text normalText = new Text(line + "\n");
+                normalText.setFont(Font.font("Arial", 12)); // Regular font
+                textFlow.getChildren().add(normalText);
+            }
+        }
+    }
+
+
+
+
+    // Method to parse and format the response
+    public static void parseAndFormat(String input, TextFlow textFlow) {
+        // Clear existing content
+        textFlow.getChildren().clear();
+
+        // Split the text into lines
+        String[] lines = input.split("\n");
+
+        for (String line : lines) {
+            // Bold formatting: *word*
+            if (line.contains("*")) {
+                String[] parts = line.split("\\*");
+                for (int i = 0; i < parts.length; i++) {
+                    if (i % 2 == 1) {
+                        // Add bold text
+                        Text boldText = new Text(parts[i]);
+                        boldText.setStyle("-fx-font-weight: bold");
+                        textFlow.getChildren().add(boldText);
+                    } else {
+                        // Add normal text
+                        textFlow.getChildren().add(new Text(parts[i]));
+                    }
+                }
+            }
+            // Step format: Step 1
+            else if (line.matches("Step \\d+.*")) {
+                Text stepText = new Text(line + "\n");
+                stepText.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+                textFlow.getChildren().add(stepText);
+            }
+            // Code block: ```language .... ```
+            else if (line.startsWith("```")) {
+                StringBuilder codeBuilder = new StringBuilder();
+                boolean isCode = true;
+                for (String codeLine : lines) {
+                    if (codeLine.startsWith("```")) {
+                        isCode = !isCode;
+                        continue;
+                    }
+                    if (isCode) {
+                        codeBuilder.append(codeLine).append("\n");
+                    }
+                }
+                Text codeText = new Text(codeBuilder.toString());
+                codeText.setStyle("-fx-font-family: monospace; -fx-background-color: lightgray; -fx-padding: 5;");
+                textFlow.getChildren().add(codeText);
+            }
+            // Normal text
+            else {
+                textFlow.getChildren().add(new Text(line + "\n"));
+            }
+        }
+    }
+
+
+    public static String getCorrelationalMatrix(String trainsetName, String modelName, String resultColumn, int numberOfTrainData) {
+        try {
+            // Create the URL and open the connection
+            URL url = new URL("http://127.0.0.1:7654/api/get-correlation-matrix-info");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+
+            // Create the JSON payload
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("train_set_name", trainsetName);
+            jsonObject.addProperty("model_name", modelName);
+            jsonObject.addProperty("columns_to_encode", "");
+            jsonObject.addProperty("result_column", resultColumn);
+            jsonObject.addProperty("number_of_train_data", numberOfTrainData);
+            String jsonPayload = jsonObject.toString();
+
+            // Write the payload to the connection output stream
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            // Get the response code
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                // Read the response
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                // Remove all double quotes from the response
+                return response.toString().replaceAll("\"", "");
+            } else {
+                System.err.println("Error: " + responseCode);
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
