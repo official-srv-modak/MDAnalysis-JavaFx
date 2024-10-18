@@ -1,5 +1,7 @@
 package com.modakdev.mdanalysis;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -7,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import netscape.javascript.JSObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -15,10 +18,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.modakdev.mdanalysis.UIModuleProcessing.AI_CHAT_STYLE;
+
 public class NewProductScene {
     private static File trainFile; // Store the train file
     private static File testFile; // Store the test file
-    private static TextField splitValueField; // Split value input field
+    private static TextField splitValueField, productNameField; // Split value input field
     private static VBox addProductLayout; // Layout container
     private static List<CheckBox> headerCheckboxes; // List of checkboxes for headers
     private static ComboBox<String> decisionColumnComboBox; // ComboBox for decision columns
@@ -36,7 +41,7 @@ public class NewProductScene {
         headerCheckboxes = new ArrayList<>(); // Initialize header checkboxes list
 
         // Create UI elements for product input
-        TextField productNameField = new TextField();
+        productNameField = new TextField();
         productNameField.setPromptText("Enter Product Name");
 
         // Create "Go Back" button
@@ -121,10 +126,10 @@ public class NewProductScene {
         analyseButton.setOnAction(actionEvent -> {
             if(!productNameField.getText().isBlank() || trainFileButton.getText().contains("Choose Train") || testFileButton.getText().contains("Choose Test"))
             {
-
+                doAnalysis();
             }
             else {
-                showAlert("Mandatory Field missing", "Name, train set, test and split is mandatory");
+                showAlert("Mandatory Field missing", "Name, train set and test are mandatory");
             }
         });
 
@@ -150,6 +155,86 @@ public class NewProductScene {
         UIModuleProcessing.addScene("New Product", scene, primaryStage);
     }
 
+    private static void doAnalysis() {
+        String payloadString = "Tell me which columns should i choose and my decision column based on the following details in organised with bullet points if required:-";
+        payloadString += "name of the model : " + productNameField.getText();
+        payloadString += "train-file-sample : " + readCsvHeadersAndRows(trainFile, 5);
+        payloadString += "test-file-sample : " + readCsvHeadersAndRows(testFile, 5);
+        payloadString += "split : " + splitValueField.getText();
+
+        TextArea analysisArea = new TextArea();
+        analysisArea.setStyle(AI_CHAT_STYLE);
+        analysisArea.setWrapText(true);
+
+        analysisArea.setPrefWidth(640);
+        analysisArea.setPrefHeight(480);
+
+// Set the minimum width and height to avoid collapsing
+        analysisArea.setMinWidth(640); // Minimum width to ensure it doesn't collapse too much
+        analysisArea.setMinHeight(480); // Minimum height to ensure sufficient space
+
+        int analInd = addProductLayout.getChildren().indexOf(analyseButton);
+
+        if(addProductLayout.getChildren().contains(analysisArea))
+        {
+            addProductLayout.getChildren().remove(analysisArea);
+            addProductLayout.getChildren().add(analInd+1, analysisArea);
+        }
+        else
+            addProductLayout.getChildren().add(analInd+1, analysisArea);
+
+        if(payloadString.contains("\""))
+            payloadString = payloadString.replaceAll("\"", "");
+        UIModuleProcessing.loadChatResponse(payloadString, UrlValues.ANALYSIS_CHAT_URL_FLASK.getUrl(), analysisArea);
+        /*// Define the URL of the endpoint
+        String urlString = "http://10.0.0.47:8180/analysis-wrapper-module/chat-single-stream";
+
+        try {
+            // Create a URL object and open a connection
+            URL url = new URL(urlString);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+            // Set request method to POST
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true); // Allow sending data
+
+            if(payloadString.contains("\""))
+                payloadString = payloadString.replaceAll("\"", "");
+
+            // Create the JSON payload with the "query" field containing jsonString
+            JsonObject payObj = new JsonObject();
+            payObj.addProperty("query", payloadString);
+            String payLoad = payObj.toString();
+
+            // Write the payload to the output stream
+            try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
+                byte[] input = payLoad.getBytes(StandardCharsets.UTF_8);
+                outputStream.write(input, 0, input.length);
+            }
+
+            // Get the response code
+            int responseCode = connection.getResponseCode();
+            System.out.println("Response Code: " + responseCode);
+
+            // Read the response from the server
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                String line;
+                StringBuilder response = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                System.out.println("Response: " + response.toString());
+            }
+
+            // Close the connection
+            connection.disconnect();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }*/
+    }
+
     // Method to choose file
     private static File chooseFile(FileChooser fileChooser, String title, Stage primaryStage) {
         fileChooser.setTitle(title);
@@ -172,6 +257,42 @@ public class NewProductScene {
             e.printStackTrace();
         }
         return headers;
+    }
+
+    public static String readCsvHeadersAndRows(File csvFile, int data) {
+        JsonObject jsonObject = new JsonObject();
+        List<String> headers = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+            String line = br.readLine(); // Read the first line (header)
+            if (line != null) {
+                // Read and store the headers
+                String[] headerArray = line.split(",");
+                for (String header : headerArray) {
+                    headers.add(header.trim());
+                    jsonObject.add(header.trim(), new JsonArray()); // Initialize JsonArrays for each column
+                }
+            }
+
+            // Read the next rows (as we already read the header row)
+            int rowCount = 0;
+            while ((line = br.readLine()) != null && rowCount < data) {
+                String[] rowValues = line.split(",");
+                for (int i = 0; i < rowValues.length; i++) {
+                    // Get the header and corresponding JsonArray
+                    String header = headers.get(i);
+                    JsonArray jsonArray = jsonObject.getAsJsonArray(header);
+                    jsonArray.add(rowValues[i].trim());
+                }
+                rowCount++;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Convert the JsonObject to a string and return it
+        return jsonObject.toString();
     }
 
     // Method to populate header checkboxes

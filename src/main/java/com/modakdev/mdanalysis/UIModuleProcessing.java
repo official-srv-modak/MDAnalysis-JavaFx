@@ -1,5 +1,7 @@
 package com.modakdev.mdanalysis;
 
+import com.google.gson.JsonObject;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -8,17 +10,30 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 
-import java.io.File;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.modakdev.mdanalysis.UrlValues.*;
 import static javafx.scene.layout.Region.USE_PREF_SIZE;
 
 
 public abstract class UIModuleProcessing {
 
     static BackStackInfo backStackInfo = new BackStackInfo();
+
+    public static String AI_CHAT_STYLE = "-fx-font-family: 'Courier New'; " + // Monospaced font
+            "-fx-font-size: 12px; " + // Font size
+            "-fx-background-color: #f7f7f7; " + // Light background color
+            "-fx-border-color: #ccc; " + // Border color
+            "-fx-border-width: 1; " + // Border width
+            "-fx-padding: 5;" + // Padding
+            "-fx-text-fill: #333;"; // Text color
 
     public static boolean isValidEmail(String email) {
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
@@ -127,5 +142,63 @@ public abstract class UIModuleProcessing {
         textField.setStyle("-fx-font-size: " + fontSize + "pt;"); // Set font size
         return textField;
     }
+
+
+    public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea) {
+        new Thread(() -> {
+            try {
+                // API endpoint URL for chat response
+                URL url = new URL(urlStr);
+
+                // Open connection
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setDoOutput(true);
+
+                // Create the JSON payload
+                JsonObject payObj = new JsonObject();
+                payObj.addProperty("query", query);
+                String payLoad = payObj.toString();
+
+                // Write the JSON input to the connection output stream
+                try (OutputStream os = connection.getOutputStream()) {
+                    byte[] input = payLoad.getBytes(StandardCharsets.UTF_8);
+                    os.write(input, 0, input.length);
+                }
+
+                // Check response code
+                int responseCode = connection.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    // Read the input stream as a stream of characters
+                    try (InputStream inputStream = connection.getInputStream();
+                         Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+
+                        StringBuilder responseBuilder = new StringBuilder();
+                        int character;
+                        while ((character = reader.read()) != -1) {
+                            // Append the character to the response builder
+                            responseBuilder.append((char) character);
+
+                            // Update the UI with the new response
+                            String currentResponse = responseBuilder.toString();
+                            Platform.runLater(() -> {
+                                descriptionTextArea.setText(currentResponse);
+                                // Ensure the TextArea scrolls to the bottom
+                                descriptionTextArea.setScrollTop(Double.MAX_VALUE);
+                            });
+                        }
+
+                    }
+                } else {
+                    System.err.println("Request failed. Response code: " + responseCode);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
 
 }

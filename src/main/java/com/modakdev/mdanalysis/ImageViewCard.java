@@ -25,8 +25,9 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static com.modakdev.mdanalysis.UrlValues.ANALYSIS_CHAT_URL;
-import static com.modakdev.mdanalysis.UrlValues.ANALYSIS_CHAT_URL_SAMPLE;
+import static com.modakdev.mdanalysis.UIModuleProcessing.AI_CHAT_STYLE;
+import static com.modakdev.mdanalysis.UIModuleProcessing.loadChatResponse;
+import static com.modakdev.mdanalysis.UrlValues.*;
 
 public class ImageViewCard {
     private static Thread chatResponseThread; // Thread for handling chat response
@@ -55,17 +56,12 @@ public class ImageViewCard {
 
         // Set styles for the TextArea
         descriptionTextArea.setStyle(
-                "-fx-font-family: 'Courier New'; " + // Monospaced font
-                        "-fx-font-size: 12px; " + // Font size
-                        "-fx-background-color: #f7f7f7; " + // Light background color
-                        "-fx-border-color: #ccc; " + // Border color
-                        "-fx-border-width: 1; " + // Border width
-                        "-fx-padding: 5;" + // Padding
-                        "-fx-text-fill: #333;" // Text color
+                AI_CHAT_STYLE
         );
 
+
         // Load the chat response into the TextArea
-        loadChatResponse();
+        loadChatResponse("print hello world in python", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
 
         // Add a click event to the TextArea to open it in a larger scrollable window
         descriptionTextArea.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openDescriptionWindow());
@@ -94,9 +90,9 @@ public class ImageViewCard {
         // Set textContainer width to 50% of the parent container
         textContainer.setStyle("-fx-pref-width: 50%;");
 
-        // Set some padding and styling for the card
+        /*// Set some padding and styling for the card
         card.setStyle("-fx-padding: 10; -fx-border-color: lightgray; -fx-border-width: 1; "
-                + "-fx-border-radius: 5; -fx-background-color: white; -fx-background-radius: 5;");
+                + "-fx-border-radius: 5; -fx-background-color: white; -fx-background-radius: 5;");*/
 
         return card;
     }
@@ -112,7 +108,7 @@ public class ImageViewCard {
         descriptionArea.setEditable(false); // Make it read-only
         descriptionArea.setWrapText(true); // Enable wrapping
 
-        // Set styles for the TextArea
+        /*// Set styles for the TextArea
         descriptionArea.setStyle(
                 "-fx-font-family: 'Courier New'; " + // Monospaced font
                         "-fx-font-size: 12px; " + // Font size
@@ -121,7 +117,7 @@ public class ImageViewCard {
                         "-fx-border-width: 1; " + // Border width
                         "-fx-padding: 5;" + // Padding
                         "-fx-text-fill: #333;" // Text color
-        );
+        );*/
 
         // Create a ScrollPane to make the TextArea scrollable
         ScrollPane scrollPane = new ScrollPane(descriptionArea);
@@ -300,64 +296,5 @@ public class ImageViewCard {
                 imageView.setUserData(new double[]{event.getSceneX(), event.getSceneY()}); // Update position
             }
         });
-    }
-
-
-    private static void loadChatResponse() {
-        new Thread(() -> {
-            try {
-                // API endpoint URL for chat response
-                URL url = new URL(ANALYSIS_CHAT_URL_SAMPLE.getUrl());
-
-                // Open connection
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setDoOutput(true);
-
-                // JSON body as a string
-                String jsonInputString = "{\"query\" : \"code for * in triangle pattern\"}";
-
-                // Write the JSON input to the connection output stream
-                try (OutputStream os = connection.getOutputStream()) {
-                    byte[] input = jsonInputString.getBytes("utf-8");
-                    os.write(input, 0, input.length);
-                }
-
-                // Check response code
-                int responseCode = connection.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    // Read the input stream as a stream
-                    try (InputStream inputStream = connection.getInputStream();
-                         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-
-                        String line;
-                        StringBuilder responseBuilder = new StringBuilder();
-                        while ((line = reader.readLine()) != null) {
-                            // Strip "data:" prefix if present
-                            if (line.startsWith("data:")) {
-                                line = line.substring(5); // Remove "data:" and trim whitespace
-                            }
-
-                            // Append the line to the response builder
-                            responseBuilder.append(line).append("\n");
-
-                            // Update the UI with the new response line
-                            String currentResponse = responseBuilder.toString();
-                            Platform.runLater(() -> {
-                                descriptionTextArea.setText(currentResponse);
-                                // Ensure the TextArea scrolls to the bottom
-                                //descriptionTextArea.setScrollTop(Double.MAX_VALUE);
-                            });
-                        }
-                    }
-                } else {
-                    System.err.println("Request failed. Response code: " + responseCode);
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
     }
 }
