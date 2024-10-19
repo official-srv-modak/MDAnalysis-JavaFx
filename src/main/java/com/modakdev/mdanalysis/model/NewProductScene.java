@@ -109,7 +109,7 @@ public class NewProductScene {
                 List<String> selectedColumns = getSelectedColumns();
                 String selectedDecisionColumn = decisionColumnComboBox.getValue();
                 uploadFiles(trainFile, testFile, productNameField.getText(), selectedColumns, selectedDecisionColumn);
-                String corrMat = "Explain me this correlational matrix and no codes please just bullet point explanation :- ";
+                String corrMat = "Explain me this correlational matrix and no codes please just bullet point explanation, ignore NaN values :- ";
                 corrMat += getCorrelationalMatrix(trainFileButton.getText(), productNameField.getText(),"", 100);
                 imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText(), corrMat);
                 List<Node> nodes = addProductLayout.getChildren();
@@ -181,17 +181,23 @@ public class NewProductScene {
 
         int analInd = addProductLayout.getChildren().indexOf(analyseButton);
 
+        Label titleLabel = new Label("AI Recommendations based on the the provided data");
+
         if(addProductLayout.getChildren().contains(analysisArea) && addProductLayout.getChildren().contains(stopButton))
         {
             addProductLayout.getChildren().remove(analysisArea);
             addProductLayout.getChildren().remove(stopButton);
+            addProductLayout.getChildren().remove(titleLabel);
             addProductLayout.getChildren().add(analInd+1, stopButton);
-            addProductLayout.getChildren().add(analInd+2, analysisArea);
+            addProductLayout.getChildren().add(analInd+2, titleLabel);
+            addProductLayout.getChildren().add(analInd+3, analysisArea);
+
         }
         else
         {
             addProductLayout.getChildren().add(analInd+1, stopButton);
-            addProductLayout.getChildren().add(analInd+2, analysisArea);
+            addProductLayout.getChildren().add(analInd+2, titleLabel);
+            addProductLayout.getChildren().add(analInd+3, analysisArea);
         }
 
         if(payloadString.contains("\""))

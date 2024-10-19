@@ -150,7 +150,7 @@ public abstract class UIModuleProcessing {
     }
 
 
-    private static boolean isStreaming = true;
+    private static volatile boolean isStreaming = true;
     private static HttpURLConnection connection = null;
 
     public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton) {

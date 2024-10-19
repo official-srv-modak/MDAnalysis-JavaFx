@@ -39,8 +39,8 @@ public class ImageViewCard {
             loadImageFromCurl(imageView, values[0], imageUrl);
         }
 
-        imageView.setFitWidth(640);
-        imageView.setFitHeight(480);
+        imageView.setFitWidth(700);
+        imageView.setFitHeight(500);
 
         // Add click event to open the image in a new window when clicked
         imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openZoomedImage(imageView.getImage()));
