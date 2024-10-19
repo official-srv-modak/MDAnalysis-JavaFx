@@ -29,7 +29,7 @@ public class NewProductScene {
     private static VBox addProductLayout; // Layout container
     private static List<CheckBox> headerCheckboxes; // List of checkboxes for headers
     private static ComboBox<String> decisionColumnComboBox; // ComboBox for decision columns
-    private static Button analyseButton, uploadFilesButton, stopButton;
+    private static Button analyseButton, uploadFilesButton, stopButton, trainButton;
     private static HBox imageViewCard;
 
     // Remove split value field from layout
@@ -45,6 +45,7 @@ public class NewProductScene {
         // Create UI elements for product input
         productNameField = new TextField();
         productNameField.setPromptText("Enter Product Name");
+        trainButton = new Button("Train Model");
 
         // Create "Go Back" button
         Button goBackButton = new Button("Go Back");
@@ -410,6 +411,7 @@ public class NewProductScene {
                 {
                     int ind = addProductLayout.getChildren().indexOf(uploadFilesButton);
                     addProductLayout.getChildren().add(ind+1, analyseButton);
+                    addProductLayout.getChildren().add(trainButton);
                 }
 
             } else {
