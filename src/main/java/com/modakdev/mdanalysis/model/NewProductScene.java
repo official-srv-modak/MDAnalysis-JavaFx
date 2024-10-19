@@ -1,7 +1,9 @@
-package com.modakdev.mdanalysis;
+package com.modakdev.mdanalysis.model;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
+import com.modakdev.mdanalysis.values.UrlValues;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -9,7 +11,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import netscape.javascript.JSObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -18,8 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.modakdev.mdanalysis.UIModuleProcessing.AI_CHAT_STYLE;
-import static com.modakdev.mdanalysis.UIModuleProcessing.getCorrelationalMatrix;
+import static com.modakdev.mdanalysis.libraries.UIModuleProcessing.AI_CHAT_STYLE;
+import static com.modakdev.mdanalysis.libraries.UIModuleProcessing.getCorrelationalMatrix;
 
 public class NewProductScene {
     private static File trainFile; // Store the train file

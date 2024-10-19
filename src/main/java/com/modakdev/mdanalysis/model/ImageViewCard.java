@@ -1,4 +1,4 @@
-package com.modakdev.mdanalysis;
+package com.modakdev.mdanalysis.model;
 
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -14,20 +14,16 @@ import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static com.modakdev.mdanalysis.UIModuleProcessing.*;
-import static com.modakdev.mdanalysis.UrlValues.*;
+import static com.modakdev.mdanalysis.libraries.UIModuleProcessing.*;
+import static com.modakdev.mdanalysis.values.UrlValues.*;
 
 public class ImageViewCard {
     private static Thread chatResponseThread; // Thread for handling chat response

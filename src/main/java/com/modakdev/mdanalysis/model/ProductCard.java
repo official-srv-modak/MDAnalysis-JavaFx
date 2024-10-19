@@ -1,4 +1,4 @@
-package com.modakdev.mdanalysis;
+package com.modakdev.mdanalysis.model;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;

@@ -1,5 +1,8 @@
 package com.modakdev.mdanalysis;
 
+import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
+import com.modakdev.mdanalysis.model.DummyCard;
+import com.modakdev.mdanalysis.model.ProductCard;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -10,7 +13,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 
-import static com.modakdev.mdanalysis.NewProductScene.initializeAddProductScene;
+import static com.modakdev.mdanalysis.model.NewProductScene.initializeAddProductScene;
 
 public class HelloApplication extends Application {
 

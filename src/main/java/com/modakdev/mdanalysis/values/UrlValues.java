@@ -1,4 +1,4 @@
-package com.modakdev.mdanalysis;
+package com.modakdev.mdanalysis.values;
 
 public enum UrlValues {
     HTTP("http://"),

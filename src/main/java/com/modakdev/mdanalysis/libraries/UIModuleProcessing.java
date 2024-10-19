@@ -1,9 +1,8 @@
-package com.modakdev.mdanalysis;
+package com.modakdev.mdanalysis.libraries;
 
 import com.google.gson.JsonObject;
 import javafx.application.Platform;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.text.Font;
@@ -19,12 +18,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.modakdev.mdanalysis.UrlValues.*;
-import static javafx.scene.layout.Region.USE_PREF_SIZE;
 
 
 public abstract class UIModuleProcessing {
