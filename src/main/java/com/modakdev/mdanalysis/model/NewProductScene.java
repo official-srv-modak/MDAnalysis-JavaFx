@@ -29,7 +29,7 @@ public class NewProductScene {
     private static VBox addProductLayout; // Layout container
     private static List<CheckBox> headerCheckboxes; // List of checkboxes for headers
     private static ComboBox<String> decisionColumnComboBox; // ComboBox for decision columns
-    private static Button analyseButton, uploadFilesButton;
+    private static Button analyseButton, uploadFilesButton, stopButton;
     private static HBox imageViewCard;
 
     // Remove split value field from layout
@@ -48,6 +48,7 @@ public class NewProductScene {
 
         // Create "Go Back" button
         Button goBackButton = new Button("Go Back");
+        stopButton = new Button("Stop stream");
         // Set an onAction event (leave empty for now)
         goBackButton.setOnAction(e -> {
             UIModuleProcessing.goBack(primaryStage);
@@ -180,17 +181,22 @@ public class NewProductScene {
 
         int analInd = addProductLayout.getChildren().indexOf(analyseButton);
 
-        if(addProductLayout.getChildren().contains(analysisArea))
+        if(addProductLayout.getChildren().contains(analysisArea) && addProductLayout.getChildren().contains(stopButton))
         {
             addProductLayout.getChildren().remove(analysisArea);
-            addProductLayout.getChildren().add(analInd+1, analysisArea);
+            addProductLayout.getChildren().remove(stopButton);
+            addProductLayout.getChildren().add(analInd+1, stopButton);
+            addProductLayout.getChildren().add(analInd+2, analysisArea);
         }
         else
-            addProductLayout.getChildren().add(analInd+1, analysisArea);
+        {
+            addProductLayout.getChildren().add(analInd+1, stopButton);
+            addProductLayout.getChildren().add(analInd+2, analysisArea);
+        }
 
         if(payloadString.contains("\""))
             payloadString = payloadString.replaceAll("\"", "");
-        UIModuleProcessing.loadChatResponse(payloadString, UrlValues.ANALYSIS_CHAT_URL_FLASK.getUrl(), analysisArea);
+        UIModuleProcessing.loadChatResponse(payloadString, UrlValues.ANALYSIS_CHAT_URL_FLASK.getUrl(), analysisArea, stopButton);
     }
 
     // Method to choose file

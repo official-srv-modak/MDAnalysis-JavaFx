@@ -150,14 +150,46 @@ public abstract class UIModuleProcessing {
     }
 
 
-    public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea) {
+    private static boolean isStreaming = true;
+    private static HttpURLConnection connection = null;
+
+    public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton) {
+        // Set the initial state of the toggle button and start the stream
+        toggleButton.setText("Stop Stream");
+
+        // Start the stream immediately when the method is called
+        startStreaming(query, urlStr, descriptionTextArea, toggleButton);
+
+        // Toggle button event listener
+        toggleButton.setOnAction(event -> {
+            if (isStreaming) {
+                // Stop the stream
+                isStreaming = false;
+                toggleButton.setText("Start Stream");
+
+                // Disconnect the connection if it's active
+                if (connection != null) {
+                    connection.disconnect();
+                    connection = null;
+                }
+            } else {
+                // Start the stream again
+                isStreaming = true;
+                toggleButton.setText("Stop Stream");
+                startStreaming(query, urlStr, descriptionTextArea, toggleButton);
+            }
+        });
+    }
+
+    private static void startStreaming(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton) {
+        // Thread to handle the stream API call
         new Thread(() -> {
             try {
                 // API endpoint URL for chat response
                 URL url = new URL(urlStr);
 
                 // Open connection
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setDoOutput(true);
@@ -182,7 +214,9 @@ public abstract class UIModuleProcessing {
 
                         StringBuilder responseBuilder = new StringBuilder();
                         int character;
-                        while ((character = reader.read()) != -1) {
+
+                        // While loop to read the input stream continuously
+                        while (isStreaming && (character = reader.read()) != -1) {
                             // Append the character to the response builder
                             responseBuilder.append((char) character);
 
@@ -194,7 +228,6 @@ public abstract class UIModuleProcessing {
                                 descriptionTextArea.setScrollTop(Double.MAX_VALUE);
                             });
                         }
-
                     }
                 } else {
                     System.err.println("Request failed. Response code: " + responseCode);
@@ -202,6 +235,24 @@ public abstract class UIModuleProcessing {
 
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                // Disconnect the connection in the finally block
+                if (connection != null) {
+                    connection.disconnect();
+                    connection = null;
+                }
+
+                // Reset button state when stream stops
+                Platform.runLater(() -> {
+                    if (connection != null) {
+                        isStreaming = true;
+                        toggleButton.setText("Stop Stream");
+                    }
+                    else{
+                        isStreaming = false;
+                        toggleButton.setText("Start Stream");
+                    }
+                });
             }
         }).start();
     }
@@ -333,63 +384,6 @@ public abstract class UIModuleProcessing {
                 Text normalText = new Text(line + "\n");
                 normalText.setFont(Font.font("Arial", 12)); // Regular font
                 textFlow.getChildren().add(normalText);
-            }
-        }
-    }
-
-
-
-
-    // Method to parse and format the response
-    public static void parseAndFormat(String input, TextFlow textFlow) {
-        // Clear existing content
-        textFlow.getChildren().clear();
-
-        // Split the text into lines
-        String[] lines = input.split("\n");
-
-        for (String line : lines) {
-            // Bold formatting: *word*
-            if (line.contains("*")) {
-                String[] parts = line.split("\\*");
-                for (int i = 0; i < parts.length; i++) {
-                    if (i % 2 == 1) {
-                        // Add bold text
-                        Text boldText = new Text(parts[i]);
-                        boldText.setStyle("-fx-font-weight: bold");
-                        textFlow.getChildren().add(boldText);
-                    } else {
-                        // Add normal text
-                        textFlow.getChildren().add(new Text(parts[i]));
-                    }
-                }
-            }
-            // Step format: Step 1
-            else if (line.matches("Step \\d+.*")) {
-                Text stepText = new Text(line + "\n");
-                stepText.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-                textFlow.getChildren().add(stepText);
-            }
-            // Code block: ```language .... ```
-            else if (line.startsWith("```")) {
-                StringBuilder codeBuilder = new StringBuilder();
-                boolean isCode = true;
-                for (String codeLine : lines) {
-                    if (codeLine.startsWith("```")) {
-                        isCode = !isCode;
-                        continue;
-                    }
-                    if (isCode) {
-                        codeBuilder.append(codeLine).append("\n");
-                    }
-                }
-                Text codeText = new Text(codeBuilder.toString());
-                codeText.setStyle("-fx-font-family: monospace; -fx-background-color: lightgray; -fx-padding: 5;");
-                textFlow.getChildren().add(codeText);
-            }
-            // Normal text
-            else {
-                textFlow.getChildren().add(new Text(line + "\n"));
             }
         }
     }

@@ -2,6 +2,7 @@ package com.modakdev.mdanalysis.model;
 
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -29,6 +30,7 @@ public class ImageViewCard {
     private static Thread chatResponseThread; // Thread for handling chat response
 //    private static TextFlow descriptionTextArea; // Reference to the TextArea
     private static TextArea descriptionTextArea; // Reference to the TextArea
+    private static  Button stopButton;
 
     public static HBox initialise(String imageUrl, String... values) {
         // Create the image view
@@ -46,6 +48,9 @@ public class ImageViewCard {
         // Create the title
         Label titleLabel = new Label("AI Recommendations");
 
+        stopButton = new Button("Stop Stream");
+
+
         // Create a TextArea for the description
         descriptionTextArea = new TextArea();
         descriptionTextArea.setEditable(false); // Make it read-only
@@ -59,9 +64,9 @@ public class ImageViewCard {
 
         // Load the chat response into the TextArea
         if(values.length > 1 && values[1] != null && !values[1].isBlank())
-            loadChatResponse(values[1], ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
+            loadChatResponse(values[1], ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea, stopButton);
         else
-            loadChatResponse("write a code to print # in pyramid and explain me", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
+            loadChatResponse("write a code to print # in pyramid and explain me", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea, stopButton);
 
         // Add a click event to the TextArea to open it in a larger scrollable window
         descriptionTextArea.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openDescriptionWindow());
@@ -72,13 +77,13 @@ public class ImageViewCard {
 
         // Create a VBox for the title and description
         VBox textContainer = new VBox(5); // 5 is the spacing between elements
-        textContainer.getChildren().addAll(titleLabel, descriptionTextArea);
+        textContainer.getChildren().addAll(titleLabel, stopButton, descriptionTextArea);
 
         // Set the preferred width and height to 50% of the parent container
         descriptionTextArea.setPrefWidth(640);
         descriptionTextArea.setPrefHeight(480);
 
-// Set the minimum width and height to avoid collapsing
+        // Set the minimum width and height to avoid collapsing
         descriptionTextArea.setMinWidth(640); // Minimum width to ensure it doesn't collapse too much
         descriptionTextArea.setMinHeight(480); // Minimum height to ensure sufficient space
 
