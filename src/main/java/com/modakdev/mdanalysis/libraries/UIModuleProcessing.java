@@ -153,12 +153,12 @@ public abstract class UIModuleProcessing {
     private static volatile boolean isStreaming = true;
     private static HttpURLConnection connection = null;
 
-    public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton) {
+    public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
         // Set the initial state of the toggle button and start the stream
         toggleButton.setText("Stop Stream");
 
         // Start the stream immediately when the method is called
-        startStreaming(query, urlStr, descriptionTextArea, toggleButton);
+        startStreaming(query, urlStr, descriptionTextArea, toggleButton, placeholderText);
 
         // Toggle button event listener
         toggleButton.setOnAction(event -> {
@@ -176,15 +176,18 @@ public abstract class UIModuleProcessing {
                 // Start the stream again
                 isStreaming = true;
                 toggleButton.setText("Stop Stream");
-                startStreaming(query, urlStr, descriptionTextArea, toggleButton);
+                startStreaming(query, urlStr, descriptionTextArea, toggleButton, placeholderText);
             }
         });
     }
 
-    private static void startStreaming(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton) {
+    private static void startStreaming(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
         // Thread to handle the stream API call
         new Thread(() -> {
             try {
+                // Set placeholder text before starting the stream
+                Platform.runLater(() -> descriptionTextArea.setText(placeholderText));
+
                 // API endpoint URL for chat response
                 URL url = new URL(urlStr);
 
@@ -208,6 +211,9 @@ public abstract class UIModuleProcessing {
                 // Check response code
                 int responseCode = connection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
+                    // Clear the placeholder once the stream starts
+                    Platform.runLater(() -> descriptionTextArea.clear());
+
                     // Read the input stream as a stream of characters
                     try (InputStream inputStream = connection.getInputStream();
                          Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
@@ -242,13 +248,17 @@ public abstract class UIModuleProcessing {
                     connection = null;
                 }
 
-                // Reset button state when stream stops
+                // Update the UI when the stream stops
                 Platform.runLater(() -> {
+                    if (connection == null) {
+                        descriptionTextArea.appendText("\nStream stopped.");
+                    }
+
+                    // Reset button state when stream stops
                     if (connection != null) {
                         isStreaming = true;
                         toggleButton.setText("Stop Stream");
-                    }
-                    else{
+                    } else {
                         isStreaming = false;
                         toggleButton.setText("Start Stream");
                     }
@@ -256,6 +266,8 @@ public abstract class UIModuleProcessing {
             }
         }).start();
     }
+
+
 
 
     public static String getTextFromTextFlow(TextFlow textFlow) {

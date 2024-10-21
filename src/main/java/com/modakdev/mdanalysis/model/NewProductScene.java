@@ -112,7 +112,7 @@ public class NewProductScene {
                 uploadFiles(trainFile, testFile, productNameField.getText(), selectedColumns, selectedDecisionColumn);
                 String corrMat = "Explain me this correlational matrix and no codes please just bullet point explanation, ignore NaN values :- ";
                 corrMat += getCorrelationalMatrix(trainFileButton.getText(), productNameField.getText(),"", 100);
-                imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText(), corrMat);
+                imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText(), corrMat, "Analysing Correlational Matrix...");
                 List<Node> nodes = addProductLayout.getChildren();
                 if(addProductLayout.getChildren().get(5) instanceof HBox)
                 {
@@ -203,7 +203,7 @@ public class NewProductScene {
 
         if(payloadString.contains("\""))
             payloadString = payloadString.replaceAll("\"", "");
-        UIModuleProcessing.loadChatResponse(payloadString, UrlValues.ANALYSIS_CHAT_URL_FLASK.getUrl(), analysisArea, stopButton);
+        UIModuleProcessing.loadChatResponse(payloadString, UrlValues.ANALYSIS_CHAT_URL_FLASK.getUrl(), analysisArea, stopButton, "Analysing all the data...");
     }
 
     // Method to choose file
