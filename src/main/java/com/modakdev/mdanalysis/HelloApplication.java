@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
 import com.modakdev.mdanalysis.model.DummyCard;
 import com.modakdev.mdanalysis.model.ProductCard;
+import com.modakdev.mdanalysis.values.UrlValues;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -87,7 +88,7 @@ public class HelloApplication extends Application {
 
     public static void initializeProductCards(GridPane root) {
         // API URL
-        String urlStr = "http://10.0.0.47:1234/product-catalog-module/product/get-all-products";
+        String urlStr = UrlValues.GET_ALL_PRODUCTS.getUrl();
         String authHeader = "Basic YWRtaW46YWRtaW4="; // Authorization header
 
         new Thread(() -> {

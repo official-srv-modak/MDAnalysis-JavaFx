@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
 import com.modakdev.mdanalysis.values.UrlValues;
+import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -19,8 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.modakdev.mdanalysis.libraries.UIModuleProcessing.AI_CHAT_STYLE;
-import static com.modakdev.mdanalysis.libraries.UIModuleProcessing.getCorrelationalMatrix;
+import static com.modakdev.mdanalysis.libraries.UIModuleProcessing.*;
 
 public class NewProductScene {
     private static File trainFile; // Store the train file
@@ -28,9 +28,11 @@ public class NewProductScene {
     private static TextField splitValueField, productNameField; // Split value input field
     private static VBox addProductLayout; // Layout container
     private static List<CheckBox> headerCheckboxes; // List of checkboxes for headers
+    private static List<String> checkBoxValues;
     private static ComboBox<String> decisionColumnComboBox; // ComboBox for decision columns
     private static Button analyseButton, uploadFilesButton, stopButton, trainButton;
     private static HBox imageViewCard;
+    private static Label accuracyLbl;
 
     // Remove split value field from layout
     // Declare a variable to hold the index
@@ -46,6 +48,7 @@ public class NewProductScene {
         productNameField = new TextField();
         productNameField.setPromptText("Enter Product Name");
         trainButton = new Button("Train Model");
+        accuracyLbl = new Label();
 
         // Create "Go Back" button
         Button goBackButton = new Button("Go Back");
@@ -54,6 +57,8 @@ public class NewProductScene {
         goBackButton.setOnAction(e -> {
             UIModuleProcessing.goBack(primaryStage);
         });
+
+        checkBoxValues = new ArrayList<>();
 
         // Media choosers for train and test files
         Button trainFileButton = new Button("Choose Train Set (CSV)");
@@ -150,6 +155,14 @@ public class NewProductScene {
                 uploadFilesButton // Add the upload button
 
         );
+
+        trainButton.setOnAction(actionEvent->{
+            if(!trainButton.getText().equalsIgnoreCase("Choose Train Set (CSV)") && !testFileButton.getText().equalsIgnoreCase("Choose Test Set (CSV)") && decisionColumnComboBox != null &&! decisionColumnComboBox.getValue().isBlank() && !productNameField.getText().isBlank())
+            {
+                checkBoxValues = initialiseCheckBoxValue(headerCheckboxes);
+                trainModel(trainFileButton.getText(), decisionColumnComboBox.getValue(), testFileButton.getText(), productNameField.getText(), checkBoxValues.toArray(new String[checkBoxValues.size()]), accuracyLbl);
+            }
+        });
 
         // Create a new Scene for adding a product
         ScrollPane scrollPane = new ScrollPane();
@@ -407,11 +420,11 @@ public class NewProductScene {
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 showAlert("Success", "Files uploaded successfully.");
-                if(!addProductLayout.getChildren().contains(analyseButton))
-                {
+                if (!addProductLayout.getChildren().contains(analyseButton)) {
                     int ind = addProductLayout.getChildren().indexOf(uploadFilesButton);
-                    addProductLayout.getChildren().add(ind+1, analyseButton);
+                    addProductLayout.getChildren().add(ind + 1, analyseButton);
                     addProductLayout.getChildren().add(trainButton);
+                    addProductLayout.getChildren().add(accuracyLbl);
                 }
 
             } else {
@@ -425,12 +438,13 @@ public class NewProductScene {
 
     }
 
-    // Method to show alerts
-    private static void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private static List<String> initialiseCheckBoxValue(List<CheckBox> headerCheckboxes)
+    {
+        List<String> output = new ArrayList<>();
+        for(CheckBox headerCheckbox : headerCheckboxes) {
+            if(headerCheckbox.isSelected())
+                output.add(headerCheckbox.getText());
+        }
+        return output;
     }
 }

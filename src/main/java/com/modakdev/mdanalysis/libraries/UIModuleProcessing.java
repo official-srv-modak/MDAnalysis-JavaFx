@@ -1,6 +1,8 @@
 package com.modakdev.mdanalysis.libraries;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -17,9 +19,12 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.modakdev.mdanalysis.values.UrlValues.TRAIN_MODEL;
 
 
 public abstract class UIModuleProcessing {
@@ -447,5 +452,120 @@ public abstract class UIModuleProcessing {
             e.printStackTrace();
             return null;
         }
+    }
+
+
+    public static void trainModel(String trainFilePath, String decisionColumn, String testFilePath,
+                                  String modelName, String[] encodedColumns, Label accuracyLabel) {
+        new Thread(() -> {
+            try {
+                // API endpoint URL for training the model
+                URL url = new URL(TRAIN_MODEL.getUrl());
+
+                // Open connection
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setDoOutput(true);
+
+                // Create JSON payload
+                JsonObject jsonObject = new JsonObject();
+                jsonObject.addProperty("trainFilePath", trainFilePath);
+                jsonObject.addProperty("decisionColumn", decisionColumn);
+                jsonObject.addProperty("testFilePath", testFilePath);
+                jsonObject.addProperty("modelName", modelName);
+                jsonObject.addProperty("modelFlag", 1);
+
+                // Create JSON array for encoded columns
+                JsonArray encodedColumnsJsonArray = new JsonArray();
+                for (String column : encodedColumns) {
+                    encodedColumnsJsonArray.add(column);
+                }
+                jsonObject.add("encodedColumns", encodedColumnsJsonArray); // Add the JSON array
+
+                String jsonPayload = jsonObject.toString();
+
+                // Write JSON payload to output stream
+                try (OutputStream os = connection.getOutputStream()) {
+                    byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                    os.write(input, 0, input.length);
+                }
+
+
+
+
+                // Get response code
+                int responseCode = connection.getResponseCode();
+                StringBuilder responseBuilder = new StringBuilder();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    // Read the response body
+                    try (InputStream inputStream = connection.getInputStream();
+                         Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+                        char[] buffer = new char[1024];
+                        int bytesRead;
+                        while ((bytesRead = reader.read(buffer)) != -1) {
+                            responseBuilder.append(buffer, 0, bytesRead);
+                        }
+                    }
+
+                    // Parse the response to JSON
+                    String response = responseBuilder.toString();
+                    JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
+
+                    // You can access specific fields from jsonResponse as needed
+                    // For example, to get an accuracy value:
+                    String accuracy = jsonResponse.get("accuracy").getAsString(); // Change "accuracy" based on actual field name
+                    DecimalFormat df = new DecimalFormat("#.00"); // Format to 2 decimal places
+                    accuracy = "ACCURACY : "+df.format(Double.parseDouble(accuracy)*100) + "%";
+                    // Display success alert and response
+                    String finalAccuracy = accuracy;
+                    Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.INFORMATION, "Training Successful", "Model training completed successfully.");
+                        accuracyLabel.setText(finalAccuracy); // Display the accuracy in the label
+                    });
+                } else {
+                    // Read error response
+                    try (InputStream errorStream = connection.getErrorStream();
+                         Reader errorReader = new InputStreamReader(errorStream, StandardCharsets.UTF_8)) {
+                        char[] buffer = new char[1024];
+                        int bytesRead;
+                        while ((bytesRead = errorReader.read(buffer)) != -1) {
+                            responseBuilder.append(buffer, 0, bytesRead);
+                        }
+                    }
+
+                    // Display error alert with response
+                    String errorResponse = responseBuilder.toString();
+                    Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.ERROR, "Training Failed", "Failed to train model. Response code: " + responseCode + "\n" + errorResponse);
+                    });
+                }
+
+
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    showAlert(Alert.AlertType.ERROR, "Error", "An error occurred: " + e.getMessage());
+                });
+            }
+        }).start();
+    }
+
+
+    // Method to show alerts
+    public static void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private static void showAlert(Alert.AlertType alertType, String title, String message) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
