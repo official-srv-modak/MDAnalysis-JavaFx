@@ -6,10 +6,13 @@ import com.google.gson.JsonParser;
 import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 
 import java.io.FileReader;
@@ -21,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class TestModelPage {
@@ -35,7 +39,7 @@ public class TestModelPage {
         grid.setVgap(10);
 
         // Store user inputs in a map
-        Map<String, TextField> userInputs = new HashMap<>();
+        Map<String, TextField> userInputs = new LinkedHashMap<>();
 
         // Load previously stored user inputs, if any
         Map<String, String> previousInputs = loadUserInputs(modelName);
@@ -131,6 +135,8 @@ public class TestModelPage {
         // Get response code
         int responseCode = connection.getResponseCode();
         StringBuilder responseBuilder = new StringBuilder();
+
+        // Handle successful response
         if (responseCode == HttpURLConnection.HTTP_OK) {
             try (var reader = new java.io.BufferedReader(new java.io.InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
                 String responseLine;
@@ -138,10 +144,24 @@ public class TestModelPage {
                     responseBuilder.append(responseLine.trim());
                 }
             }
+
             // Parse and display the result
-            System.out.println("Response: " + responseBuilder.toString());
-        } else {
-            System.out.println("Failed : HTTP error code : " + responseCode);
+            String jsonResponse = responseBuilder.toString();
+            System.out.println("Response: " + jsonResponse);
+
+            // Show success alert with formatted response
+            showFormattedResponseAlert(jsonResponse);
+
+        } else { // Handle failure response
+            try (var errorReader = new java.io.BufferedReader(new java.io.InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8))) {
+                String errorLine;
+                while ((errorLine = errorReader.readLine()) != null) {
+                    responseBuilder.append(errorLine.trim());
+                }
+            }
+
+            // Show error alert with HTTP error code and message
+            showErrorAlert(responseCode, responseBuilder.toString());
         }
     }
 
@@ -186,5 +206,53 @@ public class TestModelPage {
             e.printStackTrace();
         }
         return null;
+    }
+
+    // Method to display the formatted success response in an alert
+    private static void showFormattedResponseAlert(String jsonResponse) {
+        // Parse the JSON response
+        JsonObject jsonObject = JsonParser.parseString(jsonResponse).getAsJsonObject();
+
+        // Create a TextFlow to hold the formatted key-value pairs
+        TextFlow textFlow = new TextFlow();
+
+        // Iterate through the JSON object
+        for (String key : jsonObject.keySet()) {
+            String value = jsonObject.get(key).getAsString();
+
+            // Create Text elements for key and value
+            Text boldKey = new Text(key + ": ");
+            boldKey.setStyle("-fx-font-weight: bold;");
+
+            Text normalValue = new Text(value + "\n");
+
+            // Add the key and value to the TextFlow
+            textFlow.getChildren().addAll(boldKey, normalValue);
+        }
+
+        // Create an alert dialog to show the response
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Server Response");
+        alert.setHeaderText("Model Test Result");
+        alert.getDialogPane().setContent(textFlow); // Set the content to the formatted TextFlow
+        alert.showAndWait();
+    }
+
+    // Method to display an error response in an alert
+    private static void showErrorAlert(int responseCode, String errorMessage) {
+        // Create an alert dialog for the error
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText("Failed: HTTP error code " + responseCode);
+
+        // Create a TextFlow for error details
+        TextFlow textFlow = new TextFlow();
+        Text errorText = new Text(errorMessage);
+
+        textFlow.getChildren().add(errorText);
+
+        // Set the content and show the alert
+        alert.getDialogPane().setContent(textFlow);
+        alert.showAndWait();
     }
 }

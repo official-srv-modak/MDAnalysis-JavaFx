@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
+import com.modakdev.mdanalysis.values.UrlValues;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -155,7 +156,7 @@ public class ProductPageGenerator {
 
     // Function to fetch product data using Gson
     public static JsonObject fetchProductData(String id) throws Exception {
-        String apiUrl = "http://10.0.0.47:1234/product-catalog-module/product/get-product/" + id;
+        String apiUrl = UrlValues.GET_PRODUCT.getUrl() + id;
         URL url = new URL(apiUrl);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
