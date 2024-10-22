@@ -520,7 +520,7 @@ public abstract class UIModuleProcessing {
                     // Display success alert and response
                     String finalAccuracy = accuracy;
                     Platform.runLater(() -> {
-                        showAlert(Alert.AlertType.INFORMATION, "Training Successful", "Model training completed successfully.");
+                        showAlert(Alert.AlertType.INFORMATION, "Training Successful", "Model training completed successfully. Accuracy is : " + finalAccuracy);
                         accuracyLabel.setText(finalAccuracy); // Display the accuracy in the label
                     });
                 } else {

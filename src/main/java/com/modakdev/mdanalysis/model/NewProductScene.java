@@ -70,6 +70,7 @@ public class NewProductScene {
         splitValueField = new TextField();
         splitValueField.setPromptText("Enter Split Value");
 
+
         // File chooser instance
         FileChooser fileChooser = new FileChooser();
 
@@ -279,6 +280,25 @@ public class NewProductScene {
         return jsonObject.toString();
     }
 
+    private static void populateHeaderCheckboxesAfterComboBoxSelect(String removeColumn) {
+        List<String> headers = readCsvHeaders(trainFile);
+        addProductLayout.getChildren().removeIf(node -> node instanceof CheckBox); // Remove existing checkboxes
+        addProductLayout.getChildren().remove(trainButton);
+        addProductLayout.getChildren().remove(accuracyLbl);
+        headerCheckboxes.clear(); // Clear existing checkboxes list
+        for (String header : headers) {
+            if(!header.equalsIgnoreCase(removeColumn))
+            {
+                CheckBox checkBox = new CheckBox(header);
+                headerCheckboxes.add(checkBox); // Add checkbox to the list
+                addProductLayout.getChildren().add(checkBox); // Add checkbox to layout
+            }
+        }
+        addProductLayout.getChildren().add(trainButton);
+        addProductLayout.getChildren().add(accuracyLbl);
+    }
+
+
     // Method to populate header checkboxes
     private static void populateHeaderCheckboxes(List<String> headers) {
         addProductLayout.getChildren().removeIf(node -> node instanceof CheckBox); // Remove existing checkboxes
@@ -302,6 +322,10 @@ public class NewProductScene {
         }
         decisionColumnComboBox.getItems().clear(); // Clear existing items
         decisionColumnComboBox.getItems().addAll(headers); // Add headers to ComboBox
+
+        decisionColumnComboBox.setOnAction(actionEvent -> {
+            populateHeaderCheckboxesAfterComboBoxSelect(decisionColumnComboBox.getValue());
+        });
     }
 
     // Method to get selected columns
@@ -423,8 +447,8 @@ public class NewProductScene {
                 if (!addProductLayout.getChildren().contains(analyseButton)) {
                     int ind = addProductLayout.getChildren().indexOf(uploadFilesButton);
                     addProductLayout.getChildren().add(ind + 1, analyseButton);
-                    addProductLayout.getChildren().add(trainButton);
-                    addProductLayout.getChildren().add(accuracyLbl);
+                    addProductLayout.getChildren().add(addProductLayout.getChildren().size(), trainButton);
+                    addProductLayout.getChildren().add(addProductLayout.getChildren().size(), accuracyLbl);
                 }
 
             } else {

@@ -122,10 +122,12 @@ public class HelloApplication extends Application {
                             String trainFile = product.get("trainModelPath").getAsString();
                             String testFile = product.get("testModelPath").getAsString();
                             String description = product.get("description").getAsString();
+                            String id = product.get("id").getAsString();
 //                            String imageUrl = product.get("imageUrl").getAsString();
 
                             // Create a product card using the details
                             GridPane card = ProductCard.createModelCard(
+                                    id,
                                     modelName,
                                     accuracy,
                                     trainFile,

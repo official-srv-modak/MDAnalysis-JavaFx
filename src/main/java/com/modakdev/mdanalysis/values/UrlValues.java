@@ -10,8 +10,8 @@ public enum UrlValues {
     ANALYSIS_CHAT_URL(HTTP.getUrl()+IP.getUrl()+":8180/analysis-wrapper-module/chat-single-stream"),
     ANALYSIS_CHAT_URL_SAMPLE(HTTP.getUrl()+IP.getUrl()+":8180/analysis-wrapper-module/chat-single-stream-sample"),
     ANALYSIS_CHAT_URL_FLASK(HTTP.getUrl()+IP.getUrl()+":9876/chat-single-stream"),
-    GET_ALL_PRODUCTS("http://localhost:1234/product-catalog-module/product/get-all-products"),
-    TRAIN_MODEL("http://localhost:7654/api/train-model"),
+    GET_ALL_PRODUCTS(HTTP.getUrl()+IP.getUrl()+":1234/product-catalog-module/product/get-all-products"),
+    TRAIN_MODEL(HTTP.getUrl()+IP.getUrl()+":7654/api/train-model"),
     UPLOAD_FILE(HTTP.getUrl()+LOCALHOST.getUrl()+":"+PORT.getUrl()+"/product-catalog-module/product/upload-files");
 
     private final String url;
