@@ -8,10 +8,13 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Font;
+import javafx.stage.Stage;
+
+import static com.modakdev.mdanalysis.model.ProductPageGenerator.getProducts;
 
 public class ProductCard {
 
-    public static GridPane createModelCard(String id, String modelName, String accuracy, String trainSet, String testSet, String description) {
+    public static GridPane createModelCard(Stage primaryStage, String id, String modelName, String accuracy, String trainSet, String testSet, String description) {
         // Create a GridPane
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(15));
@@ -44,6 +47,10 @@ public class ProductCard {
         viewModelButton.setPrefWidth(120); // Set preferred width for better appearance
         grid.add(viewModelButton, 1, 0); // Adding button at the top right
         GridPane.setHalignment(viewModelButton, javafx.geometry.HPos.RIGHT); // Align button to the right
+
+        viewModelButton.setOnAction(actionEvent -> {
+            getProducts(primaryStage, id);
+        });
 
         // Accuracy label
         Label accuracyLabel = new Label("Accuracy: " + accuracy);

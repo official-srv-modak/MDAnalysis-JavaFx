@@ -74,7 +74,7 @@ public class HelloApplication extends Application {
             }
         }*/
 
-        initializeProductCards(root);
+        initializeProductCards(stage, root);
 
         // Create a ScrollPane and add the GridPane to it
         ScrollPane scrollPane = new ScrollPane(root);
@@ -86,7 +86,7 @@ public class HelloApplication extends Application {
         UIModuleProcessing.addScene("Project overview", scene, stage);
     }
 
-    public static void initializeProductCards(GridPane root) {
+    public static void initializeProductCards(Stage primaryStage, GridPane root) {
         // API URL
         String urlStr = UrlValues.GET_ALL_PRODUCTS.getUrl();
         String authHeader = "Basic YWRtaW46YWRtaW4="; // Authorization header
@@ -127,6 +127,7 @@ public class HelloApplication extends Application {
 
                             // Create a product card using the details
                             GridPane card = ProductCard.createModelCard(
+                                    primaryStage,
                                     id,
                                     modelName,
                                     accuracy,
