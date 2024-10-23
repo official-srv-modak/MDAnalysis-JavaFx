@@ -13,6 +13,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 
 import java.io.*;
@@ -27,7 +28,9 @@ import java.util.regex.Pattern;
 import static com.modakdev.mdanalysis.values.UrlValues.TRAIN_MODEL;
 
 
+
 public abstract class UIModuleProcessing {
+
 
     static BackStackInfo backStackInfo = new BackStackInfo();
 
@@ -129,6 +132,10 @@ public abstract class UIModuleProcessing {
         backStackInfo.titleStack.add(title);
         backStackInfo.sceneStack.add(scene);
 
+        primaryStage.setOnCloseRequest((WindowEvent event) -> {
+            stopStreaming();
+        });
+
     }
 
     /*public static void addScene(String title, Scene scene, Stage primaryStage, double width, double height){
@@ -166,7 +173,7 @@ public abstract class UIModuleProcessing {
     }
 
 
-    private static volatile boolean isStreaming = true;
+    public static volatile boolean isStreaming = true;
     private static HttpURLConnection connection = null;
 
     public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
@@ -197,6 +204,7 @@ public abstract class UIModuleProcessing {
         });
     }
 
+    public static Button toggleButtonParent;
     private static void startStreaming(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
         // Thread to handle the stream API call
         new Thread(() -> {
@@ -271,19 +279,17 @@ public abstract class UIModuleProcessing {
                     }
 
                     // Reset button state when stream stops
-                    if (connection != null) {
-                        isStreaming = true;
-                        toggleButton.setText("Stop Stream");
-                    } else {
-                        isStreaming = false;
-                        toggleButton.setText("Start Stream");
-                    }
+                    toggleButton.setText("Start Stream");
                 });
             }
         }).start();
     }
 
 
+    private static void stopStreaming() {
+        isStreaming = false; // Set the streaming flag to false
+        toggleButtonParent.setText("Start Stream"); // Update button text to indicate streaming has stopped
+    }
 
 
     public static String getTextFromTextFlow(TextFlow textFlow) {
