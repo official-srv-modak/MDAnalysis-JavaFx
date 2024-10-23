@@ -12,6 +12,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -87,21 +88,24 @@ public class ProductPageGenerator {
 
         // Fetch and display the correlation matrix image
         String imageUrl = CORR_MAT_IMG.getUrl() + id;
-        ImageView imageView = new ImageView();
+//        ImageView imageView = new ImageView();
+
+        HBox imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), product.get("trainModelPath").getAsString().split("/")[product.get("trainModelPath").getAsString().split("/").length -1]);
+
 
         try {
             // Download the image from the URL
-            Image image = fetchImageFromUrl(imageUrl);
-            imageView.setImage(image);
+/*            Image image = fetchImageFromUrl(imageUrl);
+            imageView.setImage(image);*/
         } catch (Exception e) {
             e.printStackTrace();
             // If the image can't be loaded, do not set any image and keep the ImageView empty
         }
 
-        imageView.setFitWidth(800);
-        imageView.setPreserveRatio(true);
+//        imageView.setFitWidth(800);
+//        imageView.setPreserveRatio(true);
         grid.add(new Label("Correlation Matrix Image:"), 0, 7);
-        grid.add(imageView, 1, 7);
+        grid.add(imageViewCard, 1, 7);
 
 
 

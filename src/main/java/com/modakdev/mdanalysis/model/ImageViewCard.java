@@ -39,7 +39,7 @@ public class ImageViewCard {
             loadImageFromCurl(imageView, values[0], imageUrl);
         }
 
-        imageView.setFitWidth(700);
+        imageView.setFitWidth(600);
         imageView.setFitHeight(500);
 
         // Add click event to open the image in a new window when clicked
