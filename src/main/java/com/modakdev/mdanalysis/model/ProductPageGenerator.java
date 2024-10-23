@@ -126,7 +126,7 @@ public class ProductPageGenerator {
             grid.add(encodedColumnsArea, 1, 8);
 
             testModel.setOnAction(event -> {
-                showEncodedColumnsPage(primaryStage, encodedColumns, id, product.get("decisionColumn").getAsString(),product.get("name").getAsString());
+                showEncodedColumnsPage(primaryStage, encodedColumns, id, product.get("decisionColumn").getAsString(),product.get("name").getAsString(), product.get("accuracy").getAsString(), product.get("trainModelPath").getAsString(), product.get("testModelPath").getAsString());
             });
         }
 

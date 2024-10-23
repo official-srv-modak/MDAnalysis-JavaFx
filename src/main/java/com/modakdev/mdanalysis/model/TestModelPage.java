@@ -35,7 +35,7 @@ public class TestModelPage {
     private static final String CACHE_FILE_PATH = "user_input_cache.json"; // File to store user inputs
 
     // Method to show the encoded columns page
-    public static void showEncodedColumnsPage(Stage primaryStage, JsonArray encodedColumns, String id, String decisionColumn, String modelName) {
+    public static void showEncodedColumnsPage(Stage primaryStage, JsonArray encodedColumns, String id, String decisionColumn, String modelName, String accuracy, String trainFile, String testFile) {
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(15));
         grid.setHgap(10);
@@ -46,6 +46,24 @@ public class TestModelPage {
 
         // Load previously stored user inputs, if any
         Map<String, String> previousInputs = loadUserInputs(modelName);
+
+        // Create and style model name label
+        Label modelNameLabel = new Label("Model Name: " + modelName);
+        modelNameLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;"); // Bold and larger size
+
+        // Create and style accuracy label
+        Label accuracyLabel = new Label("Accuracy: " + accuracy);
+        accuracyLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;"); // Bold and larger size
+
+        // Create labels for train file and test file
+        Label trainFileLabel = new Label("Train File: " + trainFile);
+        Label testFileLabel = new Label("Test File: " + testFile);
+
+        // Add the labels to the grid
+        grid.add(modelNameLabel, 0, 0, 2, 1); // Span two columns
+        grid.add(accuracyLabel, 0, 1, 2, 1); // Span two columns
+        grid.add(trainFileLabel, 0, 2, 2, 1); // Span two columns
+        grid.add(testFileLabel, 0, 3, 2, 1); // Span two columns
 
         // Create editable fields for each encoded column
         for (int i = 0; i < encodedColumns.size(); i++) {
@@ -60,8 +78,8 @@ public class TestModelPage {
                 textField.setPromptText(columnName);
             }
 
-            grid.add(lbl, 0, i);
-            grid.add(textField, 1, i);
+            grid.add(lbl, 0, i + 4); // Start adding encoded column fields from row 4
+            grid.add(textField, 1, i + 4);
             userInputs.put(columnName, textField);
         }
 
@@ -103,13 +121,14 @@ public class TestModelPage {
         });
 
         // Add buttons to the grid
-        grid.add(backButton, 0, encodedColumns.size());
-        grid.add(testModelButton, 1, encodedColumns.size());
+        grid.add(backButton, 0, encodedColumns.size() + 4); // Adjust index for button placement
+        grid.add(testModelButton, 1, encodedColumns.size() + 4); // Adjust index for button placement
 
         // Create a new scene and set it on the primary stage
         Scene scene = new Scene(grid);
         UIModuleProcessing.addScene("Model Details", scene, primaryStage);
     }
+
 
     // Method to send the test model request using HttpURLConnection
     private static void sendTestModelRequest(JsonObject singleDataPoint, String decisionColumn, String modelName) throws Exception {
