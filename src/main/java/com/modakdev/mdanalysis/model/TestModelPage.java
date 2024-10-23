@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static javafx.scene.layout.Region.USE_PREF_SIZE;
+
 public class TestModelPage {
 
     private static final String CACHE_FILE_PATH = "user_input_cache.json"; // File to store user inputs

@@ -131,6 +131,17 @@ public abstract class UIModuleProcessing {
 
     }
 
+    /*public static void addScene(String title, Scene scene, Stage primaryStage, double width, double height){
+        primaryStage.setTitle(title);
+        primaryStage.setScene(scene);
+        primaryStage.setWidth(width);
+        primaryStage.setHeight(height);
+        primaryStage.show();
+        backStackInfo.titleStack.add(title);
+        backStackInfo.sceneStack.add(scene);
+
+    }*/
+
     public static Scene popScene()
     {
         backStackInfo.titleStack.pop();

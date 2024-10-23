@@ -23,6 +23,7 @@ import java.net.URL;
 import static com.modakdev.mdanalysis.model.TestModelPage.showEncodedColumnsPage;
 
 public class ProductPageGenerator {
+    static Button testModel;
     public static void getProducts(Stage primaryStage, String id) {
         try {
             // Fetch the product data using Gson
@@ -33,6 +34,7 @@ public class ProductPageGenerator {
             grid.setPadding(new Insets(15));
             grid.setHgap(10);
             grid.setVgap(10);
+            testModel = new Button("Test Model");
 
             // Populate the UI with product data (ignoring internal fields)
             createProductPage(primaryStage, response.getAsJsonObject("product"), grid, id);
@@ -47,8 +49,9 @@ public class ProductPageGenerator {
                 UIModuleProcessing.goBack(primaryStage);
             }); // Close the current window, or replace with navigation logic
 
+
             // Add the Back button to the layout
-            layout.getChildren().add(backButton);
+            layout.getChildren().addAll(backButton, testModel);
 
             // Create a ScrollPane and set the GridPane as its content
             ScrollPane scrollPane = new ScrollPane(grid);
@@ -121,14 +124,9 @@ public class ProductPageGenerator {
             grid.add(new Label("Encoded Columns:"), 0, 8);
             grid.add(encodedColumnsArea, 1, 8);
 
-            // Create a Back button
-            Button testModel = new Button("Test Model");
             testModel.setOnAction(event -> {
                 showEncodedColumnsPage(primaryStage, encodedColumns, id, product.get("decisionColumn").getAsString(),product.get("name").getAsString());
             });
-
-            // Add the Back button to the layout
-            grid.add(testModel, 0, 9);
         }
 
     }

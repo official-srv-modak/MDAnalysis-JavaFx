@@ -157,13 +157,23 @@ public class NewProductScene {
 
         );
 
-        trainButton.setOnAction(actionEvent->{
-            if(!trainButton.getText().equalsIgnoreCase("Choose Train Set (CSV)") && !testFileButton.getText().equalsIgnoreCase("Choose Test Set (CSV)") && decisionColumnComboBox != null &&! decisionColumnComboBox.getValue().isBlank() && !productNameField.getText().isBlank())
-            {
+        trainButton.setOnAction(actionEvent -> {
+            String trainSetText = trainButton.getText();
+            String testSetText = testFileButton.getText();
+            String decisionColumnValue = decisionColumnComboBox != null ? decisionColumnComboBox.getValue() : null;
+            String productNameText = productNameField.getText();
+
+            if (!trainSetText.equalsIgnoreCase("Choose Train Set (CSV)") &&
+                    !testSetText.equalsIgnoreCase("Choose Test Set (CSV)") &&
+                    decisionColumnValue != null && !decisionColumnValue.isBlank() &&
+                    !productNameText.isBlank()) {
+
                 checkBoxValues = initialiseCheckBoxValue(headerCheckboxes);
-                trainModel(trainFileButton.getText(), decisionColumnComboBox.getValue(), testFileButton.getText(), productNameField.getText(), checkBoxValues.toArray(new String[checkBoxValues.size()]), accuracyLbl);
+                trainModel(trainFileButton.getText(), decisionColumnValue, testSetText, productNameText,
+                        checkBoxValues.toArray(new String[0]), accuracyLbl);
             }
         });
+
 
         // Create a new Scene for adding a product
         ScrollPane scrollPane = new ScrollPane();

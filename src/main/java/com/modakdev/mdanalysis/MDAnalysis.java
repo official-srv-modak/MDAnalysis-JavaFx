@@ -14,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ import java.nio.charset.StandardCharsets;
 
 import static com.modakdev.mdanalysis.model.NewProductScene.initializeAddProductScene;
 
-public class HelloApplication extends Application {
+public class MDAnalysis extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -49,8 +50,16 @@ public class HelloApplication extends Application {
 
         // Add the dummy card as the first card in the grid
         GridPane dummyCard = new GridPane();
-        dummyCard.add(DummyCard.intialiseDummyCard(stage), 0, 0);
-        root.add(dummyCard, 0, 1, 2, 1); // Place dummy card spanning two columns
+
+// Create the card and add it to the GridPane
+        VBox card = DummyCard.initialiseDummyCard(stage);
+        dummyCard.add(card, 0, 0);
+
+// Ensure the card spans all three columns and uses maximum width
+        GridPane.setColumnSpan(card, 3); // Make the card span three columns
+
+// Add the dummy card to the root grid, spanning three columns
+        root.add(dummyCard, 0, 1, 3, 1); // Place dummy card spanning three columns
 
         // Dynamic card addition
         int row = 2;
