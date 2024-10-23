@@ -48,7 +48,7 @@ public class ImageViewCard {
         // Create the title
         Label titleLabel = new Label("AI Recommendations");
 
-        stopButton = new Button("Stop Stream");
+        stopButton = new Button("Cancel Analysis");
 
 
         // Create a TextArea for the description

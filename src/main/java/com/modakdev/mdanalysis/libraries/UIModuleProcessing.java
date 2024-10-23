@@ -178,7 +178,7 @@ public abstract class UIModuleProcessing {
 
     public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
         // Set the initial state of the toggle button and start the stream
-        toggleButton.setText("Stop Stream");
+        toggleButton.setText("Cancel Analysis");
 
         // Start the stream immediately when the method is called
         startStreaming(query, urlStr, descriptionTextArea, toggleButton, placeholderText);
@@ -188,7 +188,7 @@ public abstract class UIModuleProcessing {
             if (isStreaming) {
                 // Stop the stream
                 isStreaming = false;
-                toggleButton.setText("Start Stream");
+                toggleButton.setText("Start Analysis");
 
                 // Disconnect the connection if it's active
                 if (connection != null) {
@@ -198,7 +198,7 @@ public abstract class UIModuleProcessing {
             } else {
                 // Start the stream again
                 isStreaming = true;
-                toggleButton.setText("Stop Stream");
+                toggleButton.setText("Cancel Analysis");
                 startStreaming(query, urlStr, descriptionTextArea, toggleButton, placeholderText);
             }
         });
@@ -279,7 +279,7 @@ public abstract class UIModuleProcessing {
                     }
 
                     // Reset button state when stream stops
-                    toggleButton.setText("Start Stream");
+                    toggleButton.setText("Start Analysis");
                 });
             }
         }).start();
@@ -288,7 +288,7 @@ public abstract class UIModuleProcessing {
 
     private static void stopStreaming() {
         isStreaming = false; // Set the streaming flag to false
-        toggleButtonParent.setText("Start Stream"); // Update button text to indicate streaming has stopped
+        toggleButtonParent.setText("Start Analysis"); // Update button text to indicate streaming has stopped
     }
 
 
