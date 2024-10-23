@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static com.modakdev.mdanalysis.libraries.UIModuleProcessing.getCorrelationalMatrix;
 import static com.modakdev.mdanalysis.model.TestModelPage.showEncodedColumnsPage;
 import static com.modakdev.mdanalysis.values.UrlValues.CORR_MAT_IMG;
 
@@ -90,7 +91,13 @@ public class ProductPageGenerator {
         String imageUrl = CORR_MAT_IMG.getUrl() + id;
 //        ImageView imageView = new ImageView();
 
-        HBox imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), product.get("trainModelPath").getAsString().split("/")[product.get("trainModelPath").getAsString().split("/").length -1]);
+        String trainFileTxt = product.get("trainModelPath").getAsString().split("/")[product.get("trainModelPath").getAsString().split("/").length -1];
+        String productName = product.get("name").getAsString();
+        String query = "Give me a brief bullet points about the product i have sent to you in json format.";
+        query += getCorrelationalMatrix(trainFileTxt, productName,"", 100);
+        query += product;
+        query += "Don't display the json object i passed in the response. Just give your insight and analysis";
+        HBox imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileTxt, query, "Analysing Product...");
 
 
         try {

@@ -34,6 +34,8 @@ public class ImageViewCard {
 
     public static HBox initialise(String imageUrl, String... values) {
         // Create the image view
+        // value[0] - corr_mat url
+        // value[1] - query
         ImageView imageView = new ImageView();
         if (values.length > 0) {
             loadImageFromCurl(imageView, values[0], imageUrl);

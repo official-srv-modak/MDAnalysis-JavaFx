@@ -174,7 +174,6 @@ public abstract class UIModuleProcessing {
 
 
     public static volatile boolean isStreaming = true;
-    private static HttpURLConnection connection = null;
 
     public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
         // Set the initial state of the toggle button and start the stream
@@ -204,14 +203,22 @@ public abstract class UIModuleProcessing {
         });
     }
 
+    private static HttpURLConnection connection; // Tracks the active connection
     public static Button toggleButtonParent;
+
     private static void startStreaming(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
+        // Stop any existing stream if it's already running
+        toggleButtonParent = toggleButton;
+        if (isStreaming) {
+            stopStreaming();
+        }
+
         // Thread to handle the stream API call
         new Thread(() -> {
             try {
+                toggleButton.setText("Cancel Analysis");
                 // Set placeholder text before starting the stream
                 Platform.runLater(() -> descriptionTextArea.setText(placeholderText));
-
                 // API endpoint URL for chat response
                 URL url = new URL(urlStr);
 
@@ -237,6 +244,8 @@ public abstract class UIModuleProcessing {
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     // Clear the placeholder once the stream starts
                     Platform.runLater(() -> descriptionTextArea.clear());
+                    // Set streaming status to true
+                    isStreaming = true;
 
                     // Read the input stream as a stream of characters
                     try (InputStream inputStream = connection.getInputStream();
@@ -261,23 +270,18 @@ public abstract class UIModuleProcessing {
                     }
                 } else {
                     System.err.println("Request failed. Response code: " + responseCode);
+                    toggleButton.setText("Start Analysis");
                 }
 
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 // Disconnect the connection in the finally block
-                if (connection != null) {
-                    connection.disconnect();
-                    connection = null;
-                }
+                stopStreaming();
 
                 // Update the UI when the stream stops
                 Platform.runLater(() -> {
-                    if (connection == null) {
-                        descriptionTextArea.appendText("\nStream stopped.");
-                    }
-
+                    descriptionTextArea.appendText("\nStream stopped.");
                     // Reset button state when stream stops
                     toggleButton.setText("Start Analysis");
                 });
