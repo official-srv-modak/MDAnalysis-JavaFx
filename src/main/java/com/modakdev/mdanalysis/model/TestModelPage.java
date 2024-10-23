@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
+import com.modakdev.mdanalysis.values.UrlValues;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -86,7 +87,7 @@ public class TestModelPage {
                 }
 
                 if (hasEmptyFields) {
-                    System.out.println("Please fill all fields!");
+                    showErrorAlert(404, "Please fill all fields!");
                     return;
                 }
 
@@ -112,7 +113,7 @@ public class TestModelPage {
 
     // Method to send the test model request using HttpURLConnection
     private static void sendTestModelRequest(JsonObject singleDataPoint, String decisionColumn, String modelName) throws Exception {
-        URL url = new URL("http://localhost:7654/api/test-model");  // Replace with your actual API URL
+        URL url = new URL(UrlValues.TEST_MODEL.getUrl());  // Replace with your actual API URL
 
         // Open connection
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();

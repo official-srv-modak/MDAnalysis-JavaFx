@@ -21,6 +21,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import static com.modakdev.mdanalysis.model.TestModelPage.showEncodedColumnsPage;
+import static com.modakdev.mdanalysis.values.UrlValues.CORR_MAT_IMG;
 
 public class ProductPageGenerator {
     static Button testModel;
@@ -85,7 +86,7 @@ public class ProductPageGenerator {
 
 
         // Fetch and display the correlation matrix image
-        String imageUrl = "http://10.0.0.47:7654/api/get-correlation-matrix-image?id=" + id;
+        String imageUrl = CORR_MAT_IMG.getUrl() + id;
         ImageView imageView = new ImageView();
 
         try {
