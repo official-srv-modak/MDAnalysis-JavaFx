@@ -7,11 +7,9 @@ import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
 import com.modakdev.mdanalysis.values.UrlValues;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
@@ -59,29 +57,6 @@ public class TestModelPage {
         Label trainFileLabel = new Label("Train File: " + trainFile);
         Label testFileLabel = new Label("Test File: " + testFile);
 
-        // Add the labels to the grid
-        grid.add(modelNameLabel, 0, 0, 2, 1); // Span two columns
-        grid.add(accuracyLabel, 0, 1, 2, 1); // Span two columns
-        grid.add(trainFileLabel, 0, 2, 2, 1); // Span two columns
-        grid.add(testFileLabel, 0, 3, 2, 1); // Span two columns
-
-        // Create editable fields for each encoded column
-        for (int i = 0; i < encodedColumns.size(); i++) {
-            String columnName = encodedColumns.get(i).getAsString();
-            Label lbl = new Label(columnName + ":");
-            TextField textField = new TextField();
-
-            // Pre-fill the text field if previous input is available
-            if (previousInputs != null && previousInputs.containsKey(columnName)) {
-                textField.setText(previousInputs.get(columnName));
-            } else {
-                textField.setPromptText(columnName);
-            }
-
-            grid.add(lbl, 0, i + 4); // Start adding encoded column fields from row 4
-            grid.add(textField, 1, i + 4);
-            userInputs.put(columnName, textField);
-        }
 
         // Create a Back button
         Button backButton = new Button("Back");
@@ -121,13 +96,47 @@ public class TestModelPage {
         });
 
         // Add buttons to the grid
-        grid.add(backButton, 0, encodedColumns.size() + 4); // Adjust index for button placement
-        grid.add(testModelButton, 1, encodedColumns.size() + 4); // Adjust index for button placement
+        grid.add(backButton, 0, 0); // Adjust index for button placement
+        grid.add(testModelButton, 1, 0); // Adjust index for button placement
+
+        grid.add(modelNameLabel, 0, 2, 2, 1); // Span two columns
+        grid.add(accuracyLabel, 0, 3, 2, 1); // Span two columns
+        grid.add(trainFileLabel, 0, 4, 2, 1); // Span two columns
+        grid.add(testFileLabel, 0, 5, 2, 1); // Span two columns
+
+        HBox imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileLabel.getText().split("/")[trainFileLabel.getText().split("/").length -1]);
+        grid.add(imageViewCard, 0, 6, 2, 1); // Span two columns
+
+        // Create editable fields for each encoded column
+        for (int i = 0; i < encodedColumns.size(); i++) {
+            String columnName = encodedColumns.get(i).getAsString();
+            Label lbl = new Label(columnName + ":");
+            TextField textField = new TextField();
+
+            // Pre-fill the text field if previous input is available
+            if (previousInputs != null && previousInputs.containsKey(columnName)) {
+                textField.setText(previousInputs.get(columnName));
+            } else {
+                textField.setPromptText(columnName);
+            }
+
+            grid.add(lbl, 0, i + 7); // Start adding encoded column fields from row 4
+            grid.add(textField, 1, i + 7);
+            userInputs.put(columnName, textField);
+        }
+
+
+
+        // Wrap the GridPane in a ScrollPane
+        ScrollPane scrollPane = new ScrollPane(grid);
+        scrollPane.setFitToWidth(true); // Allow the grid to fit the width of the ScrollPane
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS); // Always show vertical scrollbar if needed
 
         // Create a new scene and set it on the primary stage
-        Scene scene = new Scene(grid);
+        Scene scene = new Scene(scrollPane);
         UIModuleProcessing.addScene("Model Details", scene, primaryStage);
     }
+
 
 
     // Method to send the test model request using HttpURLConnection
