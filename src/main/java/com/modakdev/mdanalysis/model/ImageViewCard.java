@@ -1,6 +1,7 @@
 package com.modakdev.mdanalysis.model;
 
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -36,6 +37,7 @@ public class ImageViewCard {
         // Create the image view
         // value[0] - corr_mat url
         // value[1] - query
+        VBox imageVBox = new VBox();
         ImageView imageView = new ImageView();
         if (values.length > 0) {
             loadImageFromCurl(imageView, values[0], imageUrl);
@@ -48,7 +50,7 @@ public class ImageViewCard {
         imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openZoomedImage(imageView.getImage()));
 
         // Create the title
-        Label titleLabel = new Label("AI Recommendations");
+        Label titleLabel = new Label("AI Recommendations : ");
 
         stopButton = new Button("Cancel Analysis");
 
@@ -79,7 +81,7 @@ public class ImageViewCard {
 
         // Create a VBox for the title and description
         VBox textContainer = new VBox(5); // 5 is the spacing between elements
-        textContainer.getChildren().addAll(titleLabel, stopButton, descriptionTextArea);
+        textContainer.getChildren().addAll(titleLabel, descriptionTextArea, stopButton);
 
         // Set the preferred width and height to 50% of the parent container
         descriptionTextArea.setPrefWidth(640);
@@ -92,7 +94,12 @@ public class ImageViewCard {
 
         // Create an HBox for the card layout
         HBox card = new HBox(10); // 10 is the spacing between the image and text
-        card.getChildren().addAll(imageView, textContainer);
+
+        Label label = new Label("Image :");
+        VBox.setMargin(label, new Insets(0, 0, 10, 0)); // Only bottom margin of 10
+        imageVBox.getChildren().addAll(label, imageView);
+
+        card.getChildren().addAll(imageVBox, textContainer);
 
         // Set textContainer width to 50% of the parent container
         textContainer.setStyle("-fx-pref-width: 50%;");
@@ -100,7 +107,6 @@ public class ImageViewCard {
         /*// Set some padding and styling for the card
         card.setStyle("-fx-padding: 10; -fx-border-color: lightgray; -fx-border-width: 1; "
                 + "-fx-border-radius: 5; -fx-background-color: white; -fx-background-radius: 5;");*/
-
         return card;
     }
 
