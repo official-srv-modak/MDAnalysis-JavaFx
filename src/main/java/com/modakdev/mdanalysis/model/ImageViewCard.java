@@ -1,5 +1,6 @@
 package com.modakdev.mdanalysis.model;
 
+import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -52,7 +53,14 @@ public class ImageViewCard {
         // Create the title
         Label titleLabel = new Label("AI Recommendations : ");
 
+//        if(isStreaming)
+//            stopButton = new Button("Cancel Analysis");
+//        else
+//            stopButton = new Button("Start Analysis");
+
         stopButton = new Button("Cancel Analysis");
+
+
 
 
         // Create a TextArea for the description

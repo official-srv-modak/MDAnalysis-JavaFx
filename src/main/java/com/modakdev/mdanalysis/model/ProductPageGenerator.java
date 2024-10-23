@@ -96,7 +96,7 @@ public class ProductPageGenerator {
         String query = "Give me a brief bullet points about the product i have sent to you in json format.";
         query += getCorrelationalMatrix(trainFileTxt, productName,"", 100);
         query += product;
-        query += "Don't display the json object i passed in the response. Just give your insight and analysis";
+        query += "Don't display the json object i passed in the response. Just give your insight and analysis. Don't reveal I gave JSON Object. Just say based on the data.";
         HBox imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileTxt, query, "Analysing Product...");
 
 

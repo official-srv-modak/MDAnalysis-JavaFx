@@ -40,6 +40,10 @@ public class MDAnalysis extends Application {
         Button addButton = new Button("Add Product");
         addButton.setStyle("-fx-background-color: #007BFF; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
 
+        // Create the refresh button
+        Button refreshButton = new Button("Refresh page");
+        refreshButton.setStyle("-fx-background-color: #007BFF; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 10px;");
+
         // Position the button at the top right of the root container
         AnchorPane.setTopAnchor(addButton, 10.0);
         AnchorPane.setRightAnchor(addButton, 10.0);
@@ -47,43 +51,27 @@ public class MDAnalysis extends Application {
 
         // Add the button as the first element in the GridPane
         root.add(addButton, 0, 0, 2, 1);
+        root.add(refreshButton, 0, 1, 2, 1);
 
-        // Add the dummy card as the first card in the grid
-        GridPane dummyCard = new GridPane();
+        // Initialize and add the dummy card as the first card in the grid
+        VBox dummyCard = DummyCard.initialiseDummyCard(stage);
+        GridPane.setColumnSpan(dummyCard, 3); // Make the card span three columns
+        root.add(dummyCard, 0, 2, 3, 1); // Place dummy card spanning three columns
 
-// Create the card and add it to the GridPane
-        VBox card = DummyCard.initialiseDummyCard(stage);
-        dummyCard.add(card, 0, 0);
-
-// Ensure the card spans all three columns and uses maximum width
-        GridPane.setColumnSpan(card, 3); // Make the card span three columns
-
-// Add the dummy card to the root grid, spanning three columns
-        root.add(dummyCard, 0, 1, 3, 1); // Place dummy card spanning three columns
-
-        // Dynamic card addition
-        int row = 2;
-        int col = 0;
-        /*for (int i = 0; i < 5; i++) {
-            GridPane card = ProductCard.createModelCard(
-                    "CustomerChurnPredictor",
-                    "89.5%",
-                    "customer_train.csv",
-                    "customer_test.csv",
-                    "This model predicts customer churn based on usage patterns, demographics, and previous interactions. It uses a logistic regression algorithm for binary classification."
-            );
-            // Add the card to the grid
-            root.add(card, col, row);
-
-            // Update column and row indices for the next card
-            col++;
-            if (col > 2) { // Adjust this value based on how many columns you want
-                col = 0;
-                row++;
-            }
-        }*/
-
+        // Initialize product cards
         initializeProductCards(stage, root);
+
+        // Refresh button action
+        refreshButton.setOnAction(e -> {
+            // Clear existing product cards from the grid (keeping the dummy card)
+            root.getChildren().removeIf(node -> {
+                Integer rowIndex = GridPane.getRowIndex(node);
+                return rowIndex != null && rowIndex > 2; // Remove nodes only in rows above 2
+            });
+
+            // Reinitialize product cards
+            initializeProductCards(stage, root);
+        });
 
         // Create a ScrollPane and add the GridPane to it
         ScrollPane scrollPane = new ScrollPane(root);
@@ -94,6 +82,8 @@ public class MDAnalysis extends Application {
         Scene scene = new Scene(scrollPane, 800, 600);
         UIModuleProcessing.addScene("Project overview", scene, stage);
     }
+
+
 
     public static void initializeProductCards(Stage primaryStage, GridPane root) {
         // API URL
@@ -119,7 +109,7 @@ public class MDAnalysis extends Application {
 
                         // Initialize column and row indices for the grid
 
-                        int row = 2;
+                        int row = 3;
                         int col = 0;
 
                         for (int i = 0; i < products.size(); i++) {

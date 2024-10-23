@@ -107,7 +107,7 @@ public class TestModelPage {
         String query = "what can you tell me about this product with the data in the json I am sending?    "+productJson;
         query += "is it overfit based on accuracy? if you think so, what are the recommendation you can give?";
         query = query.replaceAll("\"", "");
-        query += "give me in bullet points.";
+        query += "give me in bullet points. Don't reveal I gave JSON Data to you. Just say based on the data.";
         HBox imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileLabel.getText().split("/")[trainFileLabel.getText().split("/").length -1], query, "Analysing the product to be tested : "+modelNameLabel.getText());
         grid.add(imageViewCard, 0, 6, 2, 1); // Span two columns
 
