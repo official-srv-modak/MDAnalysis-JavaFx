@@ -1,4 +1,4 @@
-package com.modakdev.mdanalysis;
+package com.modakdev.mdanalysis.libraries;
 
 import javafx.scene.Scene;
 

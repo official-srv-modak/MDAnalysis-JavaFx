@@ -1,9 +1,10 @@
-package com.modakdev.mdanalysis;
+package com.modakdev.mdanalysis.libraries;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import javafx.application.Platform;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.text.Font;
@@ -12,22 +13,24 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.DecimalFormat;
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.modakdev.mdanalysis.UrlValues.*;
-import static javafx.scene.layout.Region.USE_PREF_SIZE;
+import static com.modakdev.mdanalysis.values.UrlValues.TRAIN_MODEL;
+
 
 
 public abstract class UIModuleProcessing {
+
 
     static BackStackInfo backStackInfo = new BackStackInfo();
 
@@ -129,7 +132,22 @@ public abstract class UIModuleProcessing {
         backStackInfo.titleStack.add(title);
         backStackInfo.sceneStack.add(scene);
 
+        primaryStage.setOnCloseRequest((WindowEvent event) -> {
+            stopStreaming();
+        });
+
     }
+
+    /*public static void addScene(String title, Scene scene, Stage primaryStage, double width, double height){
+        primaryStage.setTitle(title);
+        primaryStage.setScene(scene);
+        primaryStage.setWidth(width);
+        primaryStage.setHeight(height);
+        primaryStage.show();
+        backStackInfo.titleStack.add(title);
+        backStackInfo.sceneStack.add(scene);
+
+    }*/
 
     public static Scene popScene()
     {
@@ -155,14 +173,57 @@ public abstract class UIModuleProcessing {
     }
 
 
-    public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea) {
+    public static volatile boolean isStreaming = true;
+
+    public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
+        // Set the initial state of the toggle button and start the stream
+        toggleButton.setText("Cancel Analysis");
+
+        // Start the stream immediately when the method is called
+        startStreaming(query, urlStr, descriptionTextArea, toggleButton, placeholderText);
+
+        // Toggle button event listener
+        toggleButton.setOnAction(event -> {
+            if (isStreaming) {
+                // Stop the stream
+                isStreaming = false;
+                toggleButton.setText("Start Analysis");
+
+                // Disconnect the connection if it's active
+                if (connection != null) {
+                    connection.disconnect();
+                    connection = null;
+                }
+            } else {
+                // Start the stream again
+                isStreaming = true;
+                toggleButton.setText("Cancel Analysis");
+                startStreaming(query, urlStr, descriptionTextArea, toggleButton, placeholderText);
+            }
+        });
+    }
+
+    private static HttpURLConnection connection; // Tracks the active connection
+    public static Button toggleButtonParent;
+
+    private static void startStreaming(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
+        // Stop any existing stream if it's already running
+        toggleButtonParent = toggleButton;
+        if (isStreaming) {
+            stopStreaming();
+        }
+
+        // Thread to handle the stream API call
         new Thread(() -> {
             try {
+                toggleButton.setText("Cancel Analysis");
+                // Set placeholder text before starting the stream
+                Platform.runLater(() -> descriptionTextArea.setText(placeholderText));
                 // API endpoint URL for chat response
                 URL url = new URL(urlStr);
 
                 // Open connection
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setDoOutput(true);
@@ -181,13 +242,20 @@ public abstract class UIModuleProcessing {
                 // Check response code
                 int responseCode = connection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
+                    // Clear the placeholder once the stream starts
+                    Platform.runLater(() -> descriptionTextArea.clear());
+                    // Set streaming status to true
+                    isStreaming = true;
+
                     // Read the input stream as a stream of characters
                     try (InputStream inputStream = connection.getInputStream();
                          Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
 
                         StringBuilder responseBuilder = new StringBuilder();
                         int character;
-                        while ((character = reader.read()) != -1) {
+
+                        // While loop to read the input stream continuously
+                        while (isStreaming && (character = reader.read()) != -1) {
                             // Append the character to the response builder
                             responseBuilder.append((char) character);
 
@@ -199,16 +267,32 @@ public abstract class UIModuleProcessing {
                                 descriptionTextArea.setScrollTop(Double.MAX_VALUE);
                             });
                         }
-
                     }
                 } else {
                     System.err.println("Request failed. Response code: " + responseCode);
+                    toggleButton.setText("Start Analysis");
                 }
 
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                // Disconnect the connection in the finally block
+                stopStreaming();
+
+                // Update the UI when the stream stops
+                Platform.runLater(() -> {
+                    descriptionTextArea.appendText("\nStream stopped.");
+                    // Reset button state when stream stops
+                    toggleButton.setText("Start Analysis");
+                });
             }
         }).start();
+    }
+
+
+    private static void stopStreaming() {
+        isStreaming = false; // Set the streaming flag to false
+        toggleButtonParent.setText("Start Analysis"); // Update button text to indicate streaming has stopped
     }
 
 
@@ -343,63 +427,6 @@ public abstract class UIModuleProcessing {
     }
 
 
-
-
-    // Method to parse and format the response
-    public static void parseAndFormat(String input, TextFlow textFlow) {
-        // Clear existing content
-        textFlow.getChildren().clear();
-
-        // Split the text into lines
-        String[] lines = input.split("\n");
-
-        for (String line : lines) {
-            // Bold formatting: *word*
-            if (line.contains("*")) {
-                String[] parts = line.split("\\*");
-                for (int i = 0; i < parts.length; i++) {
-                    if (i % 2 == 1) {
-                        // Add bold text
-                        Text boldText = new Text(parts[i]);
-                        boldText.setStyle("-fx-font-weight: bold");
-                        textFlow.getChildren().add(boldText);
-                    } else {
-                        // Add normal text
-                        textFlow.getChildren().add(new Text(parts[i]));
-                    }
-                }
-            }
-            // Step format: Step 1
-            else if (line.matches("Step \\d+.*")) {
-                Text stepText = new Text(line + "\n");
-                stepText.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-                textFlow.getChildren().add(stepText);
-            }
-            // Code block: ```language .... ```
-            else if (line.startsWith("```")) {
-                StringBuilder codeBuilder = new StringBuilder();
-                boolean isCode = true;
-                for (String codeLine : lines) {
-                    if (codeLine.startsWith("```")) {
-                        isCode = !isCode;
-                        continue;
-                    }
-                    if (isCode) {
-                        codeBuilder.append(codeLine).append("\n");
-                    }
-                }
-                Text codeText = new Text(codeBuilder.toString());
-                codeText.setStyle("-fx-font-family: monospace; -fx-background-color: lightgray; -fx-padding: 5;");
-                textFlow.getChildren().add(codeText);
-            }
-            // Normal text
-            else {
-                textFlow.getChildren().add(new Text(line + "\n"));
-            }
-        }
-    }
-
-
     public static String getCorrelationalMatrix(String trainsetName, String modelName, String resultColumn, int numberOfTrainData) {
         try {
             // Create the URL and open the connection
@@ -446,5 +473,120 @@ public abstract class UIModuleProcessing {
             e.printStackTrace();
             return null;
         }
+    }
+
+
+    public static void trainModel(String trainFilePath, String decisionColumn, String testFilePath,
+                                  String modelName, String[] encodedColumns, Label accuracyLabel) {
+        new Thread(() -> {
+            try {
+                // API endpoint URL for training the model
+                URL url = new URL(TRAIN_MODEL.getUrl());
+
+                // Open connection
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setDoOutput(true);
+
+                // Create JSON payload
+                JsonObject jsonObject = new JsonObject();
+                jsonObject.addProperty("trainFilePath", trainFilePath);
+                jsonObject.addProperty("decisionColumn", decisionColumn);
+                jsonObject.addProperty("testFilePath", testFilePath);
+                jsonObject.addProperty("modelName", modelName);
+                jsonObject.addProperty("modelFlag", 1);
+
+                // Create JSON array for encoded columns
+                JsonArray encodedColumnsJsonArray = new JsonArray();
+                for (String column : encodedColumns) {
+                    encodedColumnsJsonArray.add(column);
+                }
+                jsonObject.add("encodedColumns", encodedColumnsJsonArray); // Add the JSON array
+
+                String jsonPayload = jsonObject.toString();
+
+                // Write JSON payload to output stream
+                try (OutputStream os = connection.getOutputStream()) {
+                    byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                    os.write(input, 0, input.length);
+                }
+
+
+
+
+                // Get response code
+                int responseCode = connection.getResponseCode();
+                StringBuilder responseBuilder = new StringBuilder();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    // Read the response body
+                    try (InputStream inputStream = connection.getInputStream();
+                         Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
+                        char[] buffer = new char[1024];
+                        int bytesRead;
+                        while ((bytesRead = reader.read(buffer)) != -1) {
+                            responseBuilder.append(buffer, 0, bytesRead);
+                        }
+                    }
+
+                    // Parse the response to JSON
+                    String response = responseBuilder.toString();
+                    JsonObject jsonResponse = JsonParser.parseString(response).getAsJsonObject();
+
+                    // You can access specific fields from jsonResponse as needed
+                    // For example, to get an accuracy value:
+                    String accuracy = jsonResponse.get("accuracy").getAsString(); // Change "accuracy" based on actual field name
+                    DecimalFormat df = new DecimalFormat("#.00"); // Format to 2 decimal places
+                    accuracy = "ACCURACY : "+df.format(Double.parseDouble(accuracy)*100) + "%";
+                    // Display success alert and response
+                    String finalAccuracy = accuracy;
+                    Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.INFORMATION, "Training Successful", "Model training completed successfully. Accuracy is : " + finalAccuracy);
+                        accuracyLabel.setText(finalAccuracy); // Display the accuracy in the label
+                    });
+                } else {
+                    // Read error response
+                    try (InputStream errorStream = connection.getErrorStream();
+                         Reader errorReader = new InputStreamReader(errorStream, StandardCharsets.UTF_8)) {
+                        char[] buffer = new char[1024];
+                        int bytesRead;
+                        while ((bytesRead = errorReader.read(buffer)) != -1) {
+                            responseBuilder.append(buffer, 0, bytesRead);
+                        }
+                    }
+
+                    // Display error alert with response
+                    String errorResponse = responseBuilder.toString();
+                    Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.ERROR, "Training Failed", "Failed to train model. Response code: " + responseCode + "\n" + errorResponse);
+                    });
+                }
+
+
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    showAlert(Alert.AlertType.ERROR, "Error", "An error occurred: " + e.getMessage());
+                });
+            }
+        }).start();
+    }
+
+
+    // Method to show alerts
+    public static void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    private static void showAlert(Alert.AlertType alertType, String title, String message) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }

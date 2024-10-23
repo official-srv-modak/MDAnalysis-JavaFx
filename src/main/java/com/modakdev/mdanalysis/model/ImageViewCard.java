@@ -1,7 +1,10 @@
-package com.modakdev.mdanalysis;
+package com.modakdev.mdanalysis.model;
 
+import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -14,41 +17,51 @@ import javafx.scene.input.ZoomEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static com.modakdev.mdanalysis.UIModuleProcessing.*;
-import static com.modakdev.mdanalysis.UrlValues.*;
+import static com.modakdev.mdanalysis.libraries.UIModuleProcessing.*;
+import static com.modakdev.mdanalysis.values.UrlValues.*;
 
 public class ImageViewCard {
     private static Thread chatResponseThread; // Thread for handling chat response
 //    private static TextFlow descriptionTextArea; // Reference to the TextArea
     private static TextArea descriptionTextArea; // Reference to the TextArea
+    private static  Button stopButton;
 
     public static HBox initialise(String imageUrl, String... values) {
         // Create the image view
+        // value[0] - corr_mat url
+        // value[1] - query
+        VBox imageVBox = new VBox();
         ImageView imageView = new ImageView();
         if (values.length > 0) {
             loadImageFromCurl(imageView, values[0], imageUrl);
         }
 
-        imageView.setFitWidth(640);
-        imageView.setFitHeight(480);
+        imageView.setFitWidth(600);
+        imageView.setFitHeight(500);
 
         // Add click event to open the image in a new window when clicked
         imageView.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openZoomedImage(imageView.getImage()));
 
         // Create the title
-        Label titleLabel = new Label("AI Recommendations");
+        Label titleLabel = new Label("AI Recommendations : ");
+
+//        if(isStreaming)
+//            stopButton = new Button("Cancel Analysis");
+//        else
+//            stopButton = new Button("Start Analysis");
+
+        stopButton = new Button("Cancel Analysis");
+
+
+
 
         // Create a TextArea for the description
         descriptionTextArea = new TextArea();
@@ -62,10 +75,10 @@ public class ImageViewCard {
 
 
         // Load the chat response into the TextArea
-        if(values.length > 1 && values[1] != null && !values[1].isBlank())
-            loadChatResponse(values[1], ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
+        if(values.length > 2 && values[1] != null && !values[1].isBlank() && values[2]!=null && !values[2].isBlank())
+            loadChatResponse(values[1], ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea, stopButton, values[2]);
         else
-            loadChatResponse("write a code to print # in pyramid and explain me", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea);
+            loadChatResponse("write a code to print # in pyramid and explain me", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea, stopButton,"Analysing...");
 
         // Add a click event to the TextArea to open it in a larger scrollable window
         descriptionTextArea.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> openDescriptionWindow());
@@ -76,20 +89,25 @@ public class ImageViewCard {
 
         // Create a VBox for the title and description
         VBox textContainer = new VBox(5); // 5 is the spacing between elements
-        textContainer.getChildren().addAll(titleLabel, descriptionTextArea);
+        textContainer.getChildren().addAll(titleLabel, descriptionTextArea, stopButton);
 
         // Set the preferred width and height to 50% of the parent container
         descriptionTextArea.setPrefWidth(640);
         descriptionTextArea.setPrefHeight(480);
 
-// Set the minimum width and height to avoid collapsing
+        // Set the minimum width and height to avoid collapsing
         descriptionTextArea.setMinWidth(640); // Minimum width to ensure it doesn't collapse too much
         descriptionTextArea.setMinHeight(480); // Minimum height to ensure sufficient space
 
 
         // Create an HBox for the card layout
         HBox card = new HBox(10); // 10 is the spacing between the image and text
-        card.getChildren().addAll(imageView, textContainer);
+
+        Label label = new Label("Image :");
+        VBox.setMargin(label, new Insets(0, 0, 10, 0)); // Only bottom margin of 10
+        imageVBox.getChildren().addAll(label, imageView);
+
+        card.getChildren().addAll(imageVBox, textContainer);
 
         // Set textContainer width to 50% of the parent container
         textContainer.setStyle("-fx-pref-width: 50%;");
@@ -97,7 +115,6 @@ public class ImageViewCard {
         /*// Set some padding and styling for the card
         card.setStyle("-fx-padding: 10; -fx-border-color: lightgray; -fx-border-width: 1; "
                 + "-fx-border-radius: 5; -fx-background-color: white; -fx-background-radius: 5;");*/
-
         return card;
     }
 

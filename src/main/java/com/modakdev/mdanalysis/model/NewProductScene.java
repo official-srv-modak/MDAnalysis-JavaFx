@@ -1,7 +1,10 @@
-package com.modakdev.mdanalysis;
+package com.modakdev.mdanalysis.model;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.modakdev.mdanalysis.libraries.UIModuleProcessing;
+import com.modakdev.mdanalysis.values.UrlValues;
+import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -9,7 +12,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import netscape.javascript.JSObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -18,8 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.modakdev.mdanalysis.UIModuleProcessing.AI_CHAT_STYLE;
-import static com.modakdev.mdanalysis.UIModuleProcessing.getCorrelationalMatrix;
+import static com.modakdev.mdanalysis.libraries.UIModuleProcessing.*;
 
 public class NewProductScene {
     private static File trainFile; // Store the train file
@@ -27,9 +28,11 @@ public class NewProductScene {
     private static TextField splitValueField, productNameField; // Split value input field
     private static VBox addProductLayout; // Layout container
     private static List<CheckBox> headerCheckboxes; // List of checkboxes for headers
+    private static List<String> checkBoxValues;
     private static ComboBox<String> decisionColumnComboBox; // ComboBox for decision columns
-    private static Button analyseButton, uploadFilesButton;
+    private static Button analyseButton, uploadFilesButton, stopButton, trainButton;
     private static HBox imageViewCard;
+    private static Label accuracyLbl;
 
     // Remove split value field from layout
     // Declare a variable to hold the index
@@ -44,13 +47,18 @@ public class NewProductScene {
         // Create UI elements for product input
         productNameField = new TextField();
         productNameField.setPromptText("Enter Product Name");
+        trainButton = new Button("Train Model");
+        accuracyLbl = new Label();
 
         // Create "Go Back" button
         Button goBackButton = new Button("Go Back");
+        stopButton = new Button("Stop stream");
         // Set an onAction event (leave empty for now)
         goBackButton.setOnAction(e -> {
             UIModuleProcessing.goBack(primaryStage);
         });
+
+        checkBoxValues = new ArrayList<>();
 
         // Media choosers for train and test files
         Button trainFileButton = new Button("Choose Train Set (CSV)");
@@ -61,6 +69,7 @@ public class NewProductScene {
         // Split value input
         splitValueField = new TextField();
         splitValueField.setPromptText("Enter Split Value");
+
 
         // File chooser instance
         FileChooser fileChooser = new FileChooser();
@@ -107,9 +116,9 @@ public class NewProductScene {
                 List<String> selectedColumns = getSelectedColumns();
                 String selectedDecisionColumn = decisionColumnComboBox.getValue();
                 uploadFiles(trainFile, testFile, productNameField.getText(), selectedColumns, selectedDecisionColumn);
-                String corrMat = "Explain me this correlational matrix and no codes please just bullet point explanation :- ";
+                String corrMat = "Explain me this correlational matrix and no codes please just bullet point explanation, ignore NaN values :- ";
                 corrMat += getCorrelationalMatrix(trainFileButton.getText(), productNameField.getText(),"", 100);
-                imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText(), corrMat);
+                imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileButton.getText(), corrMat, "Analysing Correlational Matrix...");
                 List<Node> nodes = addProductLayout.getChildren();
                 if(addProductLayout.getChildren().get(5) instanceof HBox)
                 {
@@ -148,6 +157,24 @@ public class NewProductScene {
 
         );
 
+        trainButton.setOnAction(actionEvent -> {
+            String trainSetText = trainButton.getText();
+            String testSetText = testFileButton.getText();
+            String decisionColumnValue = decisionColumnComboBox != null ? decisionColumnComboBox.getValue() : null;
+            String productNameText = productNameField.getText();
+
+            if (!trainSetText.equalsIgnoreCase("Choose Train Set (CSV)") &&
+                    !testSetText.equalsIgnoreCase("Choose Test Set (CSV)") &&
+                    decisionColumnValue != null && !decisionColumnValue.isBlank() &&
+                    !productNameText.isBlank()) {
+
+                checkBoxValues = initialiseCheckBoxValue(headerCheckboxes);
+                trainModel(trainFileButton.getText(), decisionColumnValue, testSetText, productNameText,
+                        checkBoxValues.toArray(new String[0]), accuracyLbl);
+            }
+        });
+
+
         // Create a new Scene for adding a product
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setContent(addProductLayout);
@@ -179,17 +206,28 @@ public class NewProductScene {
 
         int analInd = addProductLayout.getChildren().indexOf(analyseButton);
 
-        if(addProductLayout.getChildren().contains(analysisArea))
+        Label titleLabel = new Label("AI Recommendations based on the the provided data");
+
+        if(addProductLayout.getChildren().contains(analysisArea) && addProductLayout.getChildren().contains(stopButton))
         {
             addProductLayout.getChildren().remove(analysisArea);
-            addProductLayout.getChildren().add(analInd+1, analysisArea);
+            addProductLayout.getChildren().remove(stopButton);
+            addProductLayout.getChildren().remove(titleLabel);
+            addProductLayout.getChildren().add(analInd+1, stopButton);
+            addProductLayout.getChildren().add(analInd+2, titleLabel);
+            addProductLayout.getChildren().add(analInd+3, analysisArea);
+
         }
         else
-            addProductLayout.getChildren().add(analInd+1, analysisArea);
+        {
+            addProductLayout.getChildren().add(analInd+1, stopButton);
+            addProductLayout.getChildren().add(analInd+2, titleLabel);
+            addProductLayout.getChildren().add(analInd+3, analysisArea);
+        }
 
         if(payloadString.contains("\""))
             payloadString = payloadString.replaceAll("\"", "");
-        UIModuleProcessing.loadChatResponse(payloadString, UrlValues.ANALYSIS_CHAT_URL_FLASK.getUrl(), analysisArea);
+        UIModuleProcessing.loadChatResponse(payloadString, UrlValues.ANALYSIS_CHAT_URL_FLASK.getUrl(), analysisArea, stopButton, "Analysing all the data...");
     }
 
     // Method to choose file
@@ -252,6 +290,25 @@ public class NewProductScene {
         return jsonObject.toString();
     }
 
+    private static void populateHeaderCheckboxesAfterComboBoxSelect(String removeColumn) {
+        List<String> headers = readCsvHeaders(trainFile);
+        addProductLayout.getChildren().removeIf(node -> node instanceof CheckBox); // Remove existing checkboxes
+        addProductLayout.getChildren().remove(trainButton);
+        addProductLayout.getChildren().remove(accuracyLbl);
+        headerCheckboxes.clear(); // Clear existing checkboxes list
+        for (String header : headers) {
+            if(!header.equalsIgnoreCase(removeColumn))
+            {
+                CheckBox checkBox = new CheckBox(header);
+                headerCheckboxes.add(checkBox); // Add checkbox to the list
+                addProductLayout.getChildren().add(checkBox); // Add checkbox to layout
+            }
+        }
+        addProductLayout.getChildren().add(trainButton);
+        addProductLayout.getChildren().add(accuracyLbl);
+    }
+
+
     // Method to populate header checkboxes
     private static void populateHeaderCheckboxes(List<String> headers) {
         addProductLayout.getChildren().removeIf(node -> node instanceof CheckBox); // Remove existing checkboxes
@@ -275,6 +332,10 @@ public class NewProductScene {
         }
         decisionColumnComboBox.getItems().clear(); // Clear existing items
         decisionColumnComboBox.getItems().addAll(headers); // Add headers to ComboBox
+
+        decisionColumnComboBox.setOnAction(actionEvent -> {
+            populateHeaderCheckboxesAfterComboBoxSelect(decisionColumnComboBox.getValue());
+        });
     }
 
     // Method to get selected columns
@@ -393,10 +454,11 @@ public class NewProductScene {
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 showAlert("Success", "Files uploaded successfully.");
-                if(!addProductLayout.getChildren().contains(analyseButton))
-                {
+                if (!addProductLayout.getChildren().contains(analyseButton)) {
                     int ind = addProductLayout.getChildren().indexOf(uploadFilesButton);
-                    addProductLayout.getChildren().add(ind+1, analyseButton);
+                    addProductLayout.getChildren().add(ind + 1, analyseButton);
+                    addProductLayout.getChildren().add(addProductLayout.getChildren().size(), trainButton);
+                    addProductLayout.getChildren().add(addProductLayout.getChildren().size(), accuracyLbl);
                 }
 
             } else {
@@ -410,12 +472,13 @@ public class NewProductScene {
 
     }
 
-    // Method to show alerts
-    private static void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private static List<String> initialiseCheckBoxValue(List<CheckBox> headerCheckboxes)
+    {
+        List<String> output = new ArrayList<>();
+        for(CheckBox headerCheckbox : headerCheckboxes) {
+            if(headerCheckbox.isSelected())
+                output.add(headerCheckbox.getText());
+        }
+        return output;
     }
 }
