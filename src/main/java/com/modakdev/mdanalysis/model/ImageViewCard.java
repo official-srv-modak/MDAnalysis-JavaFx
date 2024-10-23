@@ -65,7 +65,7 @@ public class ImageViewCard {
 
 
         // Load the chat response into the TextArea
-        if(values.length > 1 && values[1] != null && !values[1].isBlank() && values[2]!=null && !values[2].isBlank())
+        if(values.length > 2 && values[1] != null && !values[1].isBlank() && values[2]!=null && !values[2].isBlank())
             loadChatResponse(values[1], ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea, stopButton, values[2]);
         else
             loadChatResponse("write a code to print # in pyramid and explain me", ANALYSIS_CHAT_URL_FLASK.getUrl(), descriptionTextArea, stopButton,"Analysing...");

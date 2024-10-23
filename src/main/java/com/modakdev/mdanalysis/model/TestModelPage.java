@@ -33,7 +33,7 @@ public class TestModelPage {
     private static final String CACHE_FILE_PATH = "user_input_cache.json"; // File to store user inputs
 
     // Method to show the encoded columns page
-    public static void showEncodedColumnsPage(Stage primaryStage, JsonArray encodedColumns, String id, String decisionColumn, String modelName, String accuracy, String trainFile, String testFile) {
+    public static void showEncodedColumnsPage(Stage primaryStage, JsonArray encodedColumns, String productJson, String decisionColumn, String modelName, String accuracy, String trainFile, String testFile) {
         GridPane grid = new GridPane();
         grid.setPadding(new Insets(15));
         grid.setHgap(10);
@@ -104,7 +104,11 @@ public class TestModelPage {
         grid.add(trainFileLabel, 0, 4, 2, 1); // Span two columns
         grid.add(testFileLabel, 0, 5, 2, 1); // Span two columns
 
-        HBox imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileLabel.getText().split("/")[trainFileLabel.getText().split("/").length -1]);
+        String query = "what can you tell me about this product with the data in the json I am sending?    "+productJson;
+        query += "is it overfit based on accuracy? if you think so, what are the recommendation you can give?";
+        query = query.replaceAll("\"", "");
+        query += "give me in bullet points.";
+        HBox imageViewCard = ImageViewCard.initialise(UrlValues.IMAGE_URL.getUrl(), trainFileLabel.getText().split("/")[trainFileLabel.getText().split("/").length -1], query, "Analysing the product to be tested : "+modelNameLabel.getText());
         grid.add(imageViewCard, 0, 6, 2, 1); // Span two columns
 
         // Create editable fields for each encoded column
