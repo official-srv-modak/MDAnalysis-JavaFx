@@ -21,7 +21,7 @@ public class DummyCard {
         card.setPrefWidth(Double.MAX_VALUE); // Ensure it prefers maximum width
 
         // Create Labels and Text for the card details
-        Label companyTitle = new Label("ABC Company");
+        Label companyTitle = new Label("Bootloaders Company");
         companyTitle.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-background-color: #000000; -fx-text-fill: white; -fx-padding: 10;");
 
         Label projectName = new Label("Project Name: PredictIQ: Intelligent Customer Segmentation");
