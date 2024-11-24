@@ -54,11 +54,11 @@ public class ImageViewCard {
         Label titleLabel = new Label("AI Recommendations : ");
 
 //        if(isStreaming)
-//            stopButton = new Button("Cancel Analysis");
+//            stopButton = new Button("Toggle Analysis");
 //        else
-//            stopButton = new Button("Start Analysis");
+//            stopButton = new Button("Toggle Analysis");
 
-        stopButton = new Button("Cancel Analysis");
+        stopButton = new Button("Toggle Analysis");
 
 
 

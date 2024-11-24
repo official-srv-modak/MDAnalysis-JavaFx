@@ -177,7 +177,7 @@ public abstract class UIModuleProcessing {
 
     public static void loadChatResponse(String query, String urlStr, TextArea descriptionTextArea, Button toggleButton, String placeholderText) {
         // Set the initial state of the toggle button and start the stream
-        toggleButton.setText("Cancel Analysis");
+        toggleButton.setText("Toggle Analysis");
 
         // Start the stream immediately when the method is called
         startStreaming(query, urlStr, descriptionTextArea, toggleButton, placeholderText);
@@ -187,7 +187,7 @@ public abstract class UIModuleProcessing {
             if (isStreaming) {
                 // Stop the stream
                 isStreaming = false;
-                toggleButton.setText("Start Analysis");
+                toggleButton.setText("Toggle Analysis");
 
                 // Disconnect the connection if it's active
                 if (connection != null) {
@@ -197,7 +197,7 @@ public abstract class UIModuleProcessing {
             } else {
                 // Start the stream again
                 isStreaming = true;
-                toggleButton.setText("Cancel Analysis");
+                toggleButton.setText("Toggle Analysis");
                 startStreaming(query, urlStr, descriptionTextArea, toggleButton, placeholderText);
             }
         });
@@ -216,7 +216,7 @@ public abstract class UIModuleProcessing {
         // Thread to handle the stream API call
         new Thread(() -> {
             try {
-                toggleButton.setText("Cancel Analysis");
+                toggleButton.setText("Toggle Analysis");
                 // Set placeholder text before starting the stream
                 Platform.runLater(() -> descriptionTextArea.setText(placeholderText));
                 // API endpoint URL for chat response
@@ -270,7 +270,7 @@ public abstract class UIModuleProcessing {
                     }
                 } else {
                     System.err.println("Request failed. Response code: " + responseCode);
-                    toggleButton.setText("Start Analysis");
+                    toggleButton.setText("Toggle Analysis");
                 }
 
             } catch (Exception e) {
@@ -283,7 +283,7 @@ public abstract class UIModuleProcessing {
                 Platform.runLater(() -> {
                     descriptionTextArea.appendText("\nStream stopped.");
                     // Reset button state when stream stops
-                    toggleButton.setText("Start Analysis");
+                    toggleButton.setText("Toggle Analysis");
                 });
             }
         }).start();
@@ -292,7 +292,7 @@ public abstract class UIModuleProcessing {
 
     private static void stopStreaming() {
         isStreaming = false; // Set the streaming flag to false
-        toggleButtonParent.setText("Start Analysis"); // Update button text to indicate streaming has stopped
+        toggleButtonParent.setText("Toggle Analysis"); // Update button text to indicate streaming has stopped
     }
 
 
